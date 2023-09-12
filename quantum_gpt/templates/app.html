@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-container">
+    <aside class="sidebar">
+        <h3>Session Info</h3>
+        <p><strong>Questions Asked:</strong> <span id="question-count">0</span></p>
+        <p><strong>Last Question Time:</strong> <span id="last-question-time">N/A</span></p>
+    </aside>
+    <div class="chat-box">
+        <div id="chat-output"></div>
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Type your question..."></textarea>
+            <button onclick="askQuestion()">Ask</button>
+        </div>
+    </div>
+</div>
+<footer>
+    <a href="{% url 'index' %}">Home</a>
+    <!-- Add other navigation links as needed -->
+</footer>
+{% endblock %}
