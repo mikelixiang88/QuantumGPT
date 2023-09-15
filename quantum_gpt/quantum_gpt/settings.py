@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-bya=nog651hzh^s(q39wc4*ihg2%ez@z-(%3mpw-@-h7l=!9jm
 DEBUG = True
 
 ALLOWED_HOSTS = []
+AUTH_USER_MODEL = 'quantum_accounts.CustomUser'
+LOGIN_URL = 'login'
 
 
 # Application definition
@@ -38,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'quantum_accounts',
+    'quantum_gpt',
 ]
 
 MIDDLEWARE = [
@@ -48,7 +53,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins to make AJAX requests
 
 ROOT_URLCONF = 'quantum_gpt.urls'
 
@@ -76,8 +84,12 @@ WSGI_APPLICATION = 'quantum_gpt.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'quantum_gpt_db',
+        'USER': 'root',
+        'PASSWORD': 'MikeinEigenstate',
+        'HOST': 'localhost',   # 'localhost' if it's on the same machine
+        'PORT': '3306',
     }
 }
 

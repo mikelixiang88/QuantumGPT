@@ -1,12 +1,40 @@
-{% extends "base.html" %}
-
-{% block content %}
-<section class="hero">
-    <h2>Welcome to Quantum GPT</h2>
-    <p>An advanced tool designed to answer quantum-related questions accurately and rigorously.</p>
-    <a href="{% url 'app_page' %}" class="cta-button">Try Quantum GPT</a>
-</section>
-<footer>
-    <p>&copy; 2023 Quantum GPT. All rights reserved.</p>
-</footer>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumGPT</title>
+    <style>
+        body {
+            background-color: #2c2c2c; /* Tech grey background */
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            text-align: center;
+            padding: 50px 0;
+        }
+        a {
+            color: #00bcd4; /* Link color */
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid #00bcd4;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        a:hover {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuantumGPT</h1>
+    <p>An online tool that can answer quantum-related questions accurately and rigorously.</p>
+    {% if user.is_authenticated %}
+        <a href="{% url 'app_page' %}">Go to App</a>
+    {% else %}
+        <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+</body>
+</html>
