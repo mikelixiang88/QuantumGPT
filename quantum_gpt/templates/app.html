@@ -47,7 +47,7 @@
             color: #ffffff;
             vertical-align: middle;
         }
-        button {
+        .enter-button {
             position: absolute;
             right: 70px; /* Adjusted to align with the right side of the textarea */
             top: 50%;
@@ -58,6 +58,20 @@
             border-radius: 5px;
             padding: 10px 20px;
             cursor: pointer;
+            margin-top: 0px;
+        }
+        button {
+            position: static;
+            right: 70px; /* Adjusted to align with the right side of the textarea */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c2c2c;
+            background-color: #00bcd4;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 25px;
         }
         button:hover {
             background-color: #008ba3;
@@ -76,24 +90,35 @@
             background-color: #4c4c4c;
         }
         .session-header {
-            padding: 35px;
-            position: relative;
-            align-items: center;
+            padding-bottom: 5px;
+            padding-left: 10px;
+            border: 1px solid #00bcd4;
+            height: 40px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #00bcd4;
+            color: #000000;
         }
-        .session-header h2, .session-header button {
-            margin-right: 10px;
-        }
+
+
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="sidebar">
-            <div class="session-header">
-                <button onclick="addSession()">Session +</button>
+            <div class="session-header" onclick="clearResponse()">
+                <p>Clear<p>
             </div>
             <ul class="session-list">
                 <!-- Sessions will be added here -->
+                <li class="active">Session 1</li>
             </ul>
+            <div class="user-info">
+                <p><strong>Username:</strong> {{ request.user.username }}</p>
+                <p id="questionsLeftElement"><strong>Question Token:</strong> {{ question_left }}</p>
+                <p id="commentsMadeElement"><strong>Comments Made:</strong> {{ comments_made }}</p>
+                <p id="questionsAskedElement"><strong>Question Asked:</strong> {{ question_asked }}</p>
+            </div>
         </div>
         <div class="response-container">
             <h2>Response</h2>
@@ -103,7 +128,7 @@
     <div class="input-section">
         <div class="input-wrapper">
             <textarea rows="2" placeholder="Type your quantum-related question here..."></textarea>
-            <button onclick="askQuestion()">Enter</button>
+            <button class="enter-button" onclick="askQuestion()">Enter</button>
         </div>
     </div>
     <form method="post">
@@ -127,11 +152,23 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    let responseContainer = document.querySelector('.response-container');
-                    responseContainer.innerHTML += `<p><strong>Question:</strong> ${question}</p>`;
-                    responseContainer.innerHTML += `<p><strong>Response:</strong> ${data.response}</p>`;
-                    document.querySelector('textarea').value = ''; // Clear the textarea
-                    responseContainer.scrollTop = responseContainer.scrollHeight; // Scroll to the most recent response
+                    if (data.error) {
+                        // Display the error message to the user
+                        alert(data.error);
+                    }else{
+                        let responseContainer = document.querySelector('.response-container');
+                        responseContainer.innerHTML += `
+                        <p><strong>Question:</strong> ${question}</p>
+                        <div class="response-section">
+                        <p class="response-text"><strong>QuantumGPT:</strong> ${data.response}</p>
+                        <button class="comment-btn" onclick="showCommentForm(this)">Comment</button>
+                        </div>
+                        <hr>`;
+                        document.getElementById('questionsLeftElement').innerHTML = `<strong>Question Token:</strong> ${data.question_left}`;
+                        document.getElementById('questionsAskedElement').innerHTML = `<strong>Question Asked:</strong> ${data.question_asked}`;
+                        document.querySelector('textarea').value = ''; // Clear the textarea
+                        responseContainer.scrollTop = responseContainer.scrollHeight; // Scroll to the most recent response
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -144,6 +181,10 @@
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        function clearResponse() {
+            document.querySelector('.response-container').innerHTML = `<h2>Response</h2>`;
         }
 
 
@@ -165,6 +206,72 @@
             currentSession = sessionElement.textContent;
             document.querySelector('.response-container').innerHTML = `<h2>Response for ${currentSession}</h2>`;
         }
+
+        function showCommentForm(buttonElement) {
+            const commentForm = `
+                <textarea class="comment-text" placeholder="Min 20 characters"></textarea>
+                <button onclick="submitComment(this)">Submit</button>
+                <button onclick="cancelComment(this)">Cancel</button>
+            `;
+
+            // Replace the "Comment" button with the comment form
+            buttonElement.outerHTML = commentForm;
+        }
+
+        function cancelComment(buttonElement) {
+            const responseText = buttonElement.parentElement.querySelector('.response-text').textContent;
+            const commentSection = `
+                <p class="response-text">${responseText}</p>
+                <button class="comment-btn" onclick="showCommentForm(this)">Comment</button>
+            `;
+
+            buttonElement.parentElement.innerHTML = commentSection;
+        }
+
+
+
+        function submitComment(buttonElement) {
+            const responseText = buttonElement.parentElement.querySelector('.response-text').textContent;
+            const commentText = buttonElement.previousElementSibling.value;
+            const username = "{{ request.user.username }}"; // Dynamically get the username
+
+            if (commentText.length >= 20) {
+                fetch('/submit_comment/', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        'response': responseText,
+                        'comment': commentText,
+                        'username': username
+                    }),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Comment submitted successfully!");
+                        // Hide the comment form and show the "Comment" button again
+                        const commentSection = `
+                            <p class="response-text">${responseText}</p>
+                            <button class="comment-btn" onclick="showCommentForm(this)">Comment</button>
+                        `;
+                        buttonElement.parentElement.innerHTML = commentSection;
+                        document.getElementById('questionsLeftElement').innerHTML = `<strong>Question Token:</strong> ${data.question_left}`;
+                        document.getElementById('commentsMadeElement').innerHTML = `<strong>Comments Made:</strong> ${data.comments_made}`;
+                    } else {
+                        alert("Error submitting comment.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                alert("Please enter a comment with at least 20 characters.");
+            }
+        }
+
     </script>
 </body>
 </html>

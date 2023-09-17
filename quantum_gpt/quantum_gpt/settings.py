@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'quantum_accounts',
     'quantum_gpt',
+    'quantum_app',
 ]
 
 MIDDLEWARE = [

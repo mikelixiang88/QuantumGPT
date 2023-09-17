@@ -5,4 +5,7 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     # Add any additional fields here if needed
+    question_token=models.IntegerField(default=20)
+    question_asked=models.IntegerField(default=0)
+    comments_made=models.IntegerField(default=0)
     pass
