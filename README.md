@@ -27,29 +27,29 @@ Quantum GPT is an online tool designed to answer quantum-related questions with 
 
 ## Directory Structure
 
-quantum_gpt/
-│
-├── manage.py
-│
-├── templates/
-│ ├── app.html
-│ ├── index.html
-│ ├── login.html
-│ └── register.html
-│
-├── quantum_accounts/
-│ ├── forms.py
-│ ├── models.py
-│ ├── urls.py
-│ └── views.py
-│
-├── quantum_app/
-│ ├── forms.py
-│ ├── models.py
-│ ├── urls.py
-│ └── views.py
-│
-└── quantum_gpt/
-├── settings.py
-└── urls.py
+-quantum_gpt/
+-│
+-├── manage.py
+-│
+-├── templates/
+-│ ├── app.html
+-│ ├── index.html
+-│ ├── login.html
+-│ └── register.html
+-│
+-├── quantum_accounts/
+-│ ├── forms.py
+-│ ├── models.py
+-│ ├── urls.py
+-│ └── views.py
+-│
+-├── quantum_app/
+-│ ├── forms.py
+-│ ├── models.py
+-│ ├── urls.py
+-│ └── views.py
+-│
+-└── quantum_gpt/
+-├── settings.py
+-└── urls.py
 
