@@ -51,12 +51,13 @@ def ask_question(request):
 
 def submit_comment(request):
     if request.method == 'POST':
+        question_get =  request.POST.get('question')
         response_get = request.POST.get('response')
         comment_get = request.POST.get('comment')
         username_get = request.POST.get('username')
 
         # Process the data as needed, e.g., save to the database
-        comment_entry = UserComment(username=username_get, response=response_get, comment=comment_get)
+        comment_entry = UserComment(username=username_get, response=response_get, comment=comment_get, question=question_get)
         comment_entry.save()
         request.user.comments_made=F('comments_made') + 1
         request.user.question_token = F('question_token') + 20

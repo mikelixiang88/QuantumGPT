@@ -16,6 +16,7 @@ class UserComment(models.Model):
     username = models.CharField(max_length=255)
     response = models.TextField()
     comment = models.TextField()
+    question = models.TextField(default="sample_question")
 
     def __str__(self):
         return self.username

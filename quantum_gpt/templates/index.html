@@ -25,16 +25,117 @@
             background-color: #00bcd4;
             color: #2c2c2c;
         }
+        .content-section {
+            margin: 20px 10%;
+            text-align: left;
+            padding: 20px 0;
+        }
+        h2, h3 {
+            color: #00bcd4;
+        }
+        .code-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap; /* Allows the blocks to wrap to the next line on smaller screens */
+        }
+
+        .code-block {
+            background-color: #333;
+            color: #00bcd4;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            white-space: pre-wrap; /* To preserve whitespace and line breaks */
+            font-family: 'Courier New', Courier, monospace;
+            width: 45%; /* Adjust width as needed */
+            box-sizing: border-box; /* Ensures padding and border are included in the total width */
+        }
+        .label {
+            color: #00bcd4; /* Same color as the links for consistency */
+            margin: 10px 0;
+            width: 45%; /* Same width as the code blocks */
+            text-align: center; /* Center the label text */
+            font-weight: bold; /* Make the label text bold */
+        }
     </style>
 </head>
 <body>
     <h1>QuantumGPT</h1>
-    <p>An online tool that can answer quantum-related questions accurately and rigorously.</p>
+    <p>An online tool tailored to answer intricate quantum-related questions with unparalleled accuracy and rigor.</p>
+
     {% if user.is_authenticated %}
         <a href="{% url 'app_page' %}">Go to App</a>
     {% else %}
         <a href="{% url 'login' %}">Login</a>
         <a href="{% url 'register' %}">Register</a>
     {% endif %}
+
+    <div class="content-section">
+        <h2>Why Quantum GPT?</h2>
+        <ul>
+            <li><strong>Precision</strong>: Get accurate answers to your quantum queries. </li>
+            <li><strong>Interaction</strong>: Contribute to building a database of reliable quantum knowledge and community. </li>
+        </ul>
+        <div class="code-container">
+            <div class="code-block" id="codeBlock1"></div>
+            <div class="code-block" id="codeBlock2"></div>
+            <div class="label" id="label1"><h3>ChatGPT 4:</h3><h3 style="color: #E53935">Incorrect &#10060</h3></div>
+            <div class="label" id="label2"><h3>QuantumGPT:</h3><h3 style="color: #4CAF50">Correct &#10003</h3></div>
+        </div>
+
+        <h2>Getting Started:</h2>
+        <ol>
+            <li><strong>Registration</strong>: If you're new here, start by creating an account. Every new user is granted 20 free question tokens as a welcome gift!</li>
+            <li><strong>Ask Away</strong>: Pose your quantum-related questions. Remember, each question consumes one token.</li>
+            <li><strong>Feedback & Rewards</strong>: Found the response insightful? Or think there's room for improvement? Leave a comment! Your feedback is invaluable to us. For every constructive comment you provide, you'll earn 20 additional question tokens.</li>
+            <li><strong>Token Management</strong>: Keep an eye on your token count. Once you've used up your initial tokens, you can earn more by providing feedback. Ensure you don't exhaust all your tokens.</li>
+            <li><strong>Privacy First</strong>: We respect your privacy. Only questions and responses that receive comments are collected for further refinement of our model. </li>
+        </ol>
+
+        <h3>Commenting Guidelines:</h3>
+        <p>Your feedback is instrumental in refining and enhancing Quantum GPT. To ensure that your comments are constructive and beneficial, please follow these guidelines:</p>
+        <h3>Good Practices:</h3>
+        <ul>
+            <li>Be Specific: Clearly mention which part of the response you found accurate or inaccurate.</li>
+            <li>Provide Context: If possible, give a brief explanation of why you agree or disagree with the response.</li>
+            <li>Constructive Criticism: If you find an error or discrepancy in the response, suggest how it can be improved or corrected.</li>
+            <li>Stay Relevant: Ensure your comments pertain to the quantum-related question and response.</li>
+            <li>Politeness Counts: Remember, Quantum GPT is a tool in development. Approach feedback with a constructive and respectful tone.</li>
+        </ul>
+
+        <h3>What to Avoid:</h3>
+        <ul>
+            <li>Vague Feedback: Comments like "This is wrong" without any further explanation aren't helpful.</li>
+            <li>Personal Opinions: Avoid basing feedback solely on personal beliefs or unverified opinions.</li>
+            <li>Inappropriate Language: Refrain from using offensive or inappropriate language in your comments.</li>
+            <li>Multiple Comments: If you have additional feedback on a single response, try to consolidate it into one comment.</li>
+            <li>Spamming: Please don't spam the comment section with irrelevant content or promotional material.</li>
+        </ul>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeWriter = (elementId, text, delay = 100) => {
+                let i = 0;
+                const element = document.getElementById(elementId);
+                const type = () => {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, delay);
+                    }
+                };
+                type();
+            };
+
+            const question1 = "Question: 50 words answer: does degenerate quantum code has to obey the quantum hamming bound?";
+            const answer1 = "\nChatGPT: No, degenerate quantum codes do not strictly have to obey the quantum Hamming bound. While the quantum Hamming bound provides a limit on the number of errors that can be corrected by non-degenerate codes, degenerate codes can sometimes correct more errors than this bound suggests by exploiting degeneracy in the error syndromes.";
+
+            const question2 = "Question: 50 words answer: does degenerate quantum code has to obey the quantum hamming bound?";
+            const answer2 = "\nQuantumGPT: It is not known for certain whether degenerate quantum codes must obey the quantum Hamming bound. However, there has been much research done to suggest that many degenerate quantum codes do obey this bound. It is an open question in quantum coding theory as to whether or not all degenerate codes must obey this bound.";
+
+            typeWriter('codeBlock1', question1 + answer1);
+            typeWriter('codeBlock2', question2 + answer2);
+        });
+    </script>
 </body>
 </html>
