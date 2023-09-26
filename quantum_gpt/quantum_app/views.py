@@ -10,34 +10,33 @@ from django.db.models import F
 openai.api_key = config('OPENAI_API_KEY')
 
 # Create your views here.
-def generate_prompt(question):
-    return """Answer the following question as QuantumGPT, an online tool that
-can answer quantum-related questions accurately and rigorously.
-Question: Must degenerate quantum error correcting codes obey the quantum
-Hamming bound?
-Answer: The parameter of a non-degenerate quantum code must obey the Hamming
-bound. An important open question in quantum coding theory is whether or not
-the parameters of a degenerate quantum code can violate this bound for
-non-degenerate quantum codes. There is no proof stating that degenerate
-codes shold obey such bound. However, there has been much work done to show
-that many degenerate quantum codes must also obey this bound.
-Question:{}
-Answer:""".format(question)
 
 @login_required
 def ask_question(request):
     if request.method == 'POST':
         question = request.POST.get('question')
+        modelType=request.POST.get('modelType')
         if request.user.question_token <= 0:
             return JsonResponse({
                 'error': 'No questions left. Please comment a response to earn tokens. Free tokens will be added to your account in one day',
             })
         # Process the question and get the response
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=generate_prompt(question),
+        if modelType=="GPT4":
+            model_used="gpt-4"
+        else:
+            model_used="gpt-3.5-turbo"
+        response = openai.ChatCompletion.create(
+            model=model_used,
             temperature=0.2,
-            max_tokens=1000,
+            max_tokens=800,
+            messages=[{"role": "system", "content": """You are QuantumGPT, an online tool that can answer quantum-related questions accurately.
+                       QuantumGPT is developed by Xiang's team in September 2023, using ChatGPT API and prompt engineering."""}, 
+               {"role": "user", "content": question}, 
+               {"role": "assistant", "content": """Here are some facts, answer the question using these facts if relevant. Quantum hamming bound
+is not quantum Gilbert-Varshamov bound. The parameter of a non-degenerate quantum code must obey the Hamming bound. An important open question in
+quantum coding theory is whether or not the parameters of a degenerate quantum code can violate this bound for non-degenerate quantum codes. There
+is no proof stating that degenerate codes shold obey such bound. However, there has been much work done to show that many degenerate quantum codes
+must also obey this bound."""}],
         )
         request.user.question_token = F('question_token') - 1
         request.user.question_asked = F('question_asked') + 1
@@ -45,7 +44,7 @@ def ask_question(request):
         request.user.refresh_from_db()
         question_token=request.user.question_token
         question_asked=request.user.question_asked
-        return JsonResponse({'response': response.choices[0].text, 'question_left': question_token, 'question_asked': question_asked,})
+        return JsonResponse({'response': response["choices"][0]["message"]["content"], 'question_left': question_token, 'question_asked': question_asked,})
     return JsonResponse({'error': 'Only POST requests are allowed'}, status=400)
 
 
@@ -55,9 +54,11 @@ def submit_comment(request):
         response_get = request.POST.get('response')
         comment_get = request.POST.get('comment')
         username_get = request.POST.get('username')
+        correctness_get=request.POST.get('correctness')
+        modelType_get=request.POST.get('modelType')
 
         # Process the data as needed, e.g., save to the database
-        comment_entry = UserComment(username=username_get, response=response_get, comment=comment_get, question=question_get)
+        comment_entry = UserComment(username=username_get, response=response_get, comment=comment_get, question=question_get, correctness=correctness_get, modelType=modelType_get)
         comment_entry.save()
         request.user.comments_made=F('comments_made') + 1
         request.user.question_token = F('question_token') + 20

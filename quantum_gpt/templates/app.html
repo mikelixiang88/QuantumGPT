@@ -95,10 +95,32 @@
             border: 1px solid #00bcd4;
             height: 40px;
             margin-top: 10px;
+            margin-bottom: 30px;
             cursor: pointer;
             background-color: #00bcd4;
             color: #000000;
         }
+        .session-button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left, similar to li */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .session-button.active {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+        .no-margin-top {
+            margin-top: 0;
+        }
+
 
 
     </style>
@@ -111,7 +133,8 @@
             </div>
             <ul class="session-list">
                 <!-- Sessions will be added here -->
-                <li class="active">Session 1</li>
+                <button id="GPT3.5" class="session-button active" onclick="selectButton('GPT3.5')">GPT-3.5</button>
+                <button id="GPT4" class="session-button no-margin-top" onclick="selectButton('GPT4')">GPT-4</button>
             </ul>
             <div class="user-info">
                 <p id="usernameElement"><strong>Username:</strong> {{ request.user.username }}</p>
@@ -141,11 +164,21 @@
         function askQuestion() {
             const username = "{{ request.user.username }}";
             let question = document.querySelector('textarea').value;
+
+            let modelType = null;
+            document.querySelectorAll('.session-button').forEach(button => {
+                if (button.classList.contains('active')) {
+                    modelType = button.id;
+                }
+            });
             if (question) {
                 // Send the question to the Django backend
                 fetch('/ask_question/', {
                     method: 'POST',
-                    body: new URLSearchParams({'question': question}),
+                    body:  new URLSearchParams({
+                        'question': question,
+                        'modelType': modelType // Include the selected button id
+                    }),
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',  // Necessary to work with Django
                         'X-CSRFToken': getCookie('csrftoken')  // For CSRF protection in Django
@@ -159,10 +192,10 @@
                     }else{
                         let responseContainer = document.querySelector('.response-container');
                         responseContainer.innerHTML += `
-                        <div class="response-section">
-                        <p class="question-text"> <strong>${username}:</strong> ${question}</p>
-                        <p class="response-text"> <strong>QuantumGPT:</strong> ${data.response}</p>
-                        <button class="comment-btn" onclick="showCommentForm(this)">Comment</button>
+                        <div class="response-section" data-model-type="${modelType}">
+                            <p class="question-text"> <strong>${username}:</strong> ${question}</p>
+                            <p class="response-text"> <strong>QuantumGPT:</strong> ${data.response}</p>
+                            <button class="comment-btn" onclick="showCommentForm(this)">Comment</button>
                         </div>
                         <hr>`;
                         document.getElementById('questionsLeftElement').innerHTML = `<strong>Question Token:</strong> ${data.question_left}`;
@@ -210,6 +243,17 @@
 
         function showCommentForm(buttonElement) {
             const commentForm = `
+                <label>
+                    <input type="radio" name="answer" value="correct"> Correct
+                </label>
+                <br>
+                <label>
+                    <input type="radio" name="answer" value="partial_correct"> Partially Correct
+                </label>
+                <br>
+                <label>
+                    <input type="radio" name="answer" value="incorrect"> Incorrect
+                </label>
                 <textarea class="comment-text" placeholder="Min 20 characters"></textarea>
                 <button onclick="submitComment(this)">Submit</button>
                 <button onclick="cancelComment(this)">Cancel</button>
@@ -241,6 +285,16 @@
             const questionElement = buttonElement.parentElement.querySelector('.question-text').innerHTML;
             const commentText = buttonElement.previousElementSibling.value;
             
+            const selectedRadioButton = buttonElement.parentElement.querySelector('input[name="answer"]:checked');
+            const correctness = selectedRadioButton ? selectedRadioButton.value : null;
+
+            const responseSection = buttonElement.parentElement;
+            const modelType = responseSection.dataset.modelType;
+
+            if (!correctness) {
+                alert('Please select an answer.');
+                return;
+            }
 
             if (commentText.length >= 20) {
                 fetch('/submit_comment/', {
@@ -249,7 +303,9 @@
                         'question': questionText,
                         'response': responseText,
                         'comment': commentText,
-                        'username': username
+                        'correctness': correctness,
+                        'username': username,
+                        'modelType': modelType
                     }),
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -279,6 +335,17 @@
             } else {
                 alert("Please enter a comment with at least 20 characters.");
             }
+        }
+
+        function selectButton(buttonId) {
+            // Deselect all buttons
+            document.querySelectorAll('.session-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Select the clicked button
+            document.getElementById(buttonId).classList.add('active');
+
         }
 
     </script>
