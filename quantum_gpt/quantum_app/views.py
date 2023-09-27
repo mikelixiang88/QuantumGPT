@@ -16,15 +16,21 @@ def ask_question(request):
     if request.method == 'POST':
         question = request.POST.get('question')
         modelType=request.POST.get('modelType')
-        if request.user.question_token <= 0:
-            return JsonResponse({
-                'error': 'No questions left. Please comment a response to earn tokens. Free tokens will be added to your account in one day',
-            })
         # Process the question and get the response
         if modelType=="GPT4":
+            if request.user.question_token < 5:
+                return JsonResponse({
+                    'error': 'Not enough tokens. Please comment a response, or peer review another comment to earn tokens. Free tokens will be added to your account by the end of every week',
+                })
             model_used="gpt-4"
+            request.user.question_token = F('question_token') - 5
         else:
+            if request.user.question_token <= 0:
+                return JsonResponse({
+                    'error': 'Not enough tokens. Please comment a response, or peer review another comment to earn tokens. Free tokens will be added to your account by the end of every week',
+                })
             model_used="gpt-3.5-turbo"
+            request.user.question_token = F('question_token') - 1
         response = openai.ChatCompletion.create(
             model=model_used,
             temperature=0.2,
@@ -38,7 +44,7 @@ quantum coding theory is whether or not the parameters of a degenerate quantum c
 is no proof stating that degenerate codes shold obey such bound. However, there has been much work done to show that many degenerate quantum codes
 must also obey this bound."""}],
         )
-        request.user.question_token = F('question_token') - 1
+        
         request.user.question_asked = F('question_asked') + 1
         request.user.save(update_fields=['question_token','question_asked'])
         request.user.refresh_from_db()
