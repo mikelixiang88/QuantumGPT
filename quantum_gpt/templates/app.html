@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuantumGPT App</title>
-    <style>
+    <style type="text/css">
         body {
             background-color: #2c2c2c; /* Tech grey background */
             font-family: Arial, sans-serif;
@@ -89,17 +90,7 @@
         .session-list li.active {
             background-color: #4c4c4c;
         }
-        .session-header {
-            padding-bottom: 5px;
-            padding-left: 10px;
-            border: 1px solid #00bcd4;
-            height: 40px;
-            margin-top: 10px;
-            margin-bottom: 30px;
-            cursor: pointer;
-            background-color: #00bcd4;
-            color: #000000;
-        }
+
         .session-button {
             display: block;
             margin-top: 10px;
@@ -120,16 +111,94 @@
         .no-margin-top {
             margin-top: 0;
         }
+        /* Dropdown Container */
+        .dropdown {
+            margin-bottom: 0; /* Add some space between the dropdown and the "Clear" button */
+        }
 
+        /* Dropdown Button */
+        .dropbtn {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
 
+        /* Dropdown Content */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #4c4c4c;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
 
+        /* Dropdown Links */
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Hover Effect */
+        .dropdown-content a:hover {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+
+        /* Show Dropdown on Hover */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Change color of the button on hover */
+        .dropbtn:hover {
+            background-color: #008ba3;
+        }
+
+        .teleporter-container {
+            position: relative;
+        }
+
+        .teleporter-text, .edit-teleporter, .save-teleporter {
+            display: none;
+        }
+
+        .teleporter-text.visible, .edit-teleporter.visible, .save-teleporter.visible {
+            display: block;
+        }
+
+        textarea.editable-teleporter {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="sidebar">
-            <div class="session-header" onclick="clearResponse()">
-                <p>Clear<p>
+            <div class="dropdown">
+                <button class="dropbtn">Menu</button>
+                <div class="dropdown-content">
+                    <a href="{% url 'index' %}">Main</a>
+                    <a href="{% url 'app_page' %}">Clear</a>
+                    <a href="{% url 'myaccount' %}">Account</a>
+                    <a href="#popular-comments">Popular Comments</a>
+                    <a href="#article">Article</a>
+                </div>
             </div>
             <ul class="session-list">
                 <!-- Sessions will be added here -->

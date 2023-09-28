@@ -8,4 +8,6 @@ class CustomUser(AbstractUser):
     question_token=models.IntegerField(default=20)
     question_asked=models.IntegerField(default=0)
     comments_made=models.IntegerField(default=0)
+    experience=models.IntegerField(default=0)
+    teleporter=models.TextField(default="The teleporter is empty")
     pass
