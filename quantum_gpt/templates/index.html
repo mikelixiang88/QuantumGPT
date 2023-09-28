@@ -61,7 +61,7 @@
 </head>
 <body>
     <h1>QuantumGPT</h1>
-    <p>An online tool tailored to answer intricate quantum-related questions with unparalleled accuracy and rigor.</p>
+    <p>An online tool using prompt engineering on ChatGPT to answer quantum-related questions with accuracy.</p>
 
     {% if user.is_authenticated %}
         <a href="{% url 'app_page' %}">Go to App</a>
@@ -86,10 +86,10 @@
         <h2>Getting Started:</h2>
         <ol>
             <li><strong>Registration</strong>: If you're new here, start by creating an account. Every new user is granted 20 free question tokens as a welcome gift!</li>
-            <li><strong>Ask Away</strong>: Pose your quantum-related questions. Remember, each question consumes one token.</li>
-            <li><strong>Feedback & Rewards</strong>: Found the response insightful? Or think there's room for improvement? Leave a comment! Your feedback is invaluable to us. For every constructive comment you provide, you'll earn 20 additional question tokens.</li>
+            <li><strong>Ask Away</strong>: Pose your quantum-related questions. Remember, each question using GPT 3.5 consumes one token, and each question using GPT 4 consumes five tokens. Please note that GPT4 takes a longer time to load so please be patient. </li>
+            <li><strong>Feedback & Rewards</strong>: Found the response insightful? Or think there's room for improvement? Leave a comment! Your feedback is invaluable to us. For every constructive comment you provide, you'll earn 20 additional question tokens, and 10 points of experience. You can build up your credibility by commenting.</li>
             <li><strong>Token Management</strong>: Keep an eye on your token count. Once you've used up your initial tokens, you can earn more by providing feedback. Ensure you don't exhaust all your tokens.</li>
-            <li><strong>Privacy First</strong>: We respect your privacy. Only questions and responses that receive comments are collected for further refinement of our model. </li>
+            <li><strong>Privacy First</strong>: We respect your privacy. We record questions and responses that receive comments for further refinement of our model. We do call ChatGPT API and number of questions asked, but we do not record questions and responses that are not commented. </li>
         </ol>
 
         <h3>Commenting Guidelines:</h3>

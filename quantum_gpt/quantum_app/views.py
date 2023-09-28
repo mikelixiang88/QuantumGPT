@@ -46,7 +46,8 @@ must also obey this bound."""}],
         )
         
         request.user.question_asked = F('question_asked') + 1
-        request.user.save(update_fields=['question_token','question_asked'])
+        request.user.experience = F('experience') + 1
+        request.user.save(update_fields=['question_token','question_asked', 'experience'])
         request.user.refresh_from_db()
         question_token=request.user.question_token
         question_asked=request.user.question_asked
@@ -68,7 +69,8 @@ def submit_comment(request):
         comment_entry.save()
         request.user.comments_made=F('comments_made') + 1
         request.user.question_token = F('question_token') + 20
-        request.user.save(update_fields=['question_token','comments_made'])
+        request.user.experience = F('experience') + 10
+        request.user.save(update_fields=['question_token','comments_made', 'experience'])
         request.user.refresh_from_db()
         question_token=request.user.question_token
         comments_made=request.user.comments_made
