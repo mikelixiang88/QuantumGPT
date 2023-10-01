@@ -139,6 +139,9 @@
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
             border-radius: 5px;
+            transition: opacity 0.3s, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
         }
 
         /* Dropdown Links */
@@ -158,6 +161,8 @@
         /* Show Dropdown on Hover */
         .dropdown:hover .dropdown-content {
             display: block;
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Change color of the button on hover */
@@ -345,7 +350,8 @@
 
 
         function submitComment(buttonElement) {
-            const username = "{{ request.user.username }}"; // Dynamically get the username
+            const user_id = "{{ request.user.id }}"; // Dynamically get the user_id
+            const username= "{{ request.user.username }}";
             const responseText = buttonElement.parentElement.querySelector('.response-text').textContent.slice(14);
             const responseElement = buttonElement.parentElement.querySelector('.response-text').innerHTML;
             const questionText = buttonElement.parentElement.querySelector('.question-text').textContent.slice(username.length+3);
@@ -371,7 +377,7 @@
                         'response': responseText,
                         'comment': commentText,
                         'correctness': correctness,
-                        'username': username,
+                        'user_id': user_id,
                         'modelType': modelType
                     }),
                     headers: {

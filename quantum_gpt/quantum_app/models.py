@@ -19,7 +19,7 @@ class UserComment(models.Model):
         ('partial_correct', 'partial_correct'),
         ('not_classified', 'not_classified')
     ]
-    username = models.CharField(max_length=255)
+    user_id = models.BigIntegerField()
     response = models.TextField()
     comment = models.TextField()
     question = models.TextField(default="sample_question")
