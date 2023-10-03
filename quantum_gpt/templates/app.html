@@ -357,7 +357,7 @@
         function submitComment(buttonElement) {
             const user_id = "{{ request.user.id }}"; // Dynamically get the user_id
             const username= "{{ request.user.username }}";
-            const responseText = buttonElement.parentElement.querySelector('.response-text').textContent.slice(14);
+            const responseText = buttonElement.parentElement.querySelector('.response-text').textContent.slice(13);
             const responseElement = buttonElement.parentElement.querySelector('.response-text').innerHTML;
             const questionText = buttonElement.parentElement.querySelector('.question-text').textContent.slice(username.length+3);
             const questionElement = buttonElement.parentElement.querySelector('.question-text').innerHTML;
