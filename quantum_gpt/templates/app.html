@@ -201,6 +201,7 @@
                     <a href="{% url 'index' %}">Main</a>
                     <a href="{% url 'app_page' %}">Clear</a>
                     <a href="{% url 'myaccount' %}">Account</a>
+                    <a href="{% url 'view_comments' %}">Discussions</a>
                 </div>
             </div>
             <ul class="session-list">
@@ -325,6 +326,10 @@
                 <br>
                 <label>
                     <input type="radio" name="answer" value="incorrect"> Incorrect
+                </label>
+                <br>
+                <label>
+                    <input type="radio" name="answer" value="doubts"> Have Doubts
                 </label>
                 <textarea class="comment-text" placeholder="Min 20 characters"></textarea>
                 <button onclick="submitComment(this)">Submit</button>

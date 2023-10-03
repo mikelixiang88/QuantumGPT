@@ -89,3 +89,27 @@ def display_user(request):
             messages.error(request, 'User not found.')
             return redirect('myaccount')  # Redirect to a different page
     return redirect('myaccount')
+
+
+def display_userID(request, user_id):
+    try:
+        obj = CustomUser.objects.get(id=user_id)
+        experience = obj.experience
+        teleporter_message = obj.teleporter
+        question_asked=obj.question_asked
+        comments_made=obj.comments_made
+        username=obj.username
+        context = {
+            'username': username,
+            'question_asked': question_asked,
+            'comments_made': comments_made,
+            'question_asked': question_asked,
+            'experience': experience,
+            'teleporter': teleporter_message,
+        }
+
+        return render(request, 'otheruser.html', context)
+
+    except ObjectDoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('myaccount')  # Redirect to a different page

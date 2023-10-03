@@ -227,7 +227,8 @@
                 <div class="dropdown-content">
                     <a href="{% url 'index' %}">Main</a>
                     <a href="{% url 'app_page' %}">App</a>
-                    <a href="#account">Account</a>
+                    <a href="{% url 'myaccount' %}">Account</a>
+                    <a href="{% url 'view_comments' %}">Discussions</a>
                 </div>
             </div>
             <!-- Additional Sidebar Content if needed -->
@@ -247,7 +248,7 @@
                 <button class="save-teleporter" onclick="saveTeleporter()">Teleport</button>
             </div>
             <div class="search-user-container">
-                <form id="searchUserForm" method="POST" action="{% url 'otheraccount' %}">
+                <form id="searchUserForm" method="POST" action="{% url 'displayuser' %}">
                     {% csrf_token %}
                     <label for="username">Search User:</label>
                     <input type="text" id="username" name="user" required>
