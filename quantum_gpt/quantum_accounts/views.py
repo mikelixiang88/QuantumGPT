@@ -8,6 +8,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.http import JsonResponse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+
 
 def register_view(request):
     if request.method == 'POST':
@@ -34,6 +37,8 @@ def login_view(request):
 def check_account(request):
     # Fetch the number of questions left and comments made.
     if request.user.is_authenticated:
+        followed_users = request.user.following.all()
+        followers = request.user.followers.all()
         question_token = request.user.question_token
         comments_made = request.user.comments_made
         question_asked=request.user.question_asked
@@ -51,20 +56,11 @@ def check_account(request):
         'comments_made': comments_made,
         'question_asked': question_asked,
         'experience': experience,
+        'followed_users': followed_users,
+        'followers': followers,
     }
 
     return render(request, 'account.html', context)
-
-def update_teleporter(request):
-    if request.method == 'POST':
-        message = request.POST.get('teleporter')
-        teleporter_message=request.user.teleporter
-        request.user.teleporter=message
-        request.user.save(update_fields=['teleporter'])
-        return JsonResponse({'success': True, 'teleporter': teleporter_message,})
-
-        
-    return JsonResponse({'success': False})
 
 def display_user(request):
     if request.method == 'POST':
@@ -75,7 +71,11 @@ def display_user(request):
             teleporter_message = obj.teleporter
             question_asked=obj.question_asked
             comments_made=obj.comments_made
+            user_id=obj.id
             context = {
+                'other_user': obj,
+                'username': usern,
+                'userid': user_id,
                 'question_asked': question_asked,
                 'comments_made': comments_made,
                 'question_asked': question_asked,
@@ -90,7 +90,6 @@ def display_user(request):
             return redirect('myaccount')  # Redirect to a different page
     return redirect('myaccount')
 
-
 def display_userID(request, user_id):
     try:
         obj = CustomUser.objects.get(id=user_id)
@@ -100,7 +99,9 @@ def display_userID(request, user_id):
         comments_made=obj.comments_made
         username=obj.username
         context = {
+            'other_user': obj,
             'username': username,
+            'userid': user_id,
             'question_asked': question_asked,
             'comments_made': comments_made,
             'question_asked': question_asked,
@@ -113,3 +114,27 @@ def display_userID(request, user_id):
     except ObjectDoesNotExist:
         messages.error(request, 'User not found.')
         return redirect('myaccount')  # Redirect to a different page
+    
+@login_required
+def update_teleporter(request):
+    if request.method == 'POST':
+        message = request.POST.get('teleporter')
+        teleporter_message=request.user.teleporter
+        request.user.teleporter=message
+        request.user.save(update_fields=['teleporter'])
+        return JsonResponse({'success': True, 'teleporter': teleporter_message,})
+
+        
+    return JsonResponse({'success': False})
+
+@login_required
+def follow_user(request, user_id):
+    user_to_follow = get_object_or_404(CustomUser, id=user_id)
+    request.user.following.add(user_to_follow)
+    return display_userID(request, user_id)  # Redirect to a suitable view, e.g., user's profile
+
+@login_required
+def unfollow_user(request, user_id):
+    user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
+    request.user.following.remove(user_to_unfollow)
+    return display_userID(request, user_id)  # Redirect to a suitable view, e.g., user's profile

@@ -211,6 +211,20 @@
         </div>
         <div class="response-container">
             <h2>User Information</h2>
+            <!-- Follow/Unfollow Button -->
+            {% if user.is_authenticated %}
+                <div style="margin-top: 20px;">
+                    {% if other_user in user.following.all %}
+                        <a href="{% url 'unfollow_user' userid %}">
+                            <button>Unfollow</button>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'follow_user' userid %}">
+                            <button>Follow</button>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
             <p><strong>Username:</strong> {{ username }}</p>
             <p><strong>Questions Asked:</strong> {{ question_asked }}</p>
             <p><strong>Comments Made:</strong> {{ comments_made }}</p>

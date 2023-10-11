@@ -217,6 +217,44 @@
         #searchUserForm button {
             align-self: flex-end; /* Align the button to the bottom of the container */
         }
+        /* Styles for the followed users and followers lists */
+        .follow-container {
+            display: flex; /* Use flexbox to lay out the child elements */
+            justify-content: space-between; /* Space out the child elements */
+            margin-top: 20px; /* Space between the search bar and the lists */
+        }
+
+        /* Adjust the width of the individual list containers */
+        .follow-list-container {
+            width: 45%; /* Slightly less than half to account for any padding/margins */
+            border: 1px solid #00bcd4; /* Match the existing border color */
+            border-radius: 5px; /* Rounded corners */
+            padding: 10px; /* Some padding inside the border */
+            margin-top: 20px; /* Space between the search bar and the lists */
+            max-height: 200px; /* Maximum height before scrolling */
+            overflow-y: auto; /* Make it scrollable vertically */
+        }
+        .follow-list-container:first-child {
+            margin-right: 5%; /* Adjust this value to increase or decrease the gap */
+        }
+        
+        .follow-list {
+            list-style-type: none; /* Remove bullet points */
+            padding: 0; /* Remove default padding */
+        }
+
+        .follow-list li {
+            padding: 5px 0; /* Space between list items */
+        }
+
+        .follow-list li a {
+            color: #00bcd4; /* Link color to match the theme */
+            text-decoration: none; /* Remove underline */
+        }
+
+        .follow-list li a:hover {
+            text-decoration: underline; /* Underline on hover */
+        }
     </style>
 </head>
 <body>
@@ -247,13 +285,35 @@
                 <button class="edit-teleporter visible" onclick="editTeleporter()">Edit Teleporter</button>
                 <button class="save-teleporter" onclick="saveTeleporter()">Teleport</button>
             </div>
-            <div class="search-user-container">
+            <!--<div class="search-user-container">
                 <form id="searchUserForm" method="POST" action="{% url 'displayuser' %}">
                     {% csrf_token %}
                     <label for="username">Search User:</label>
                     <input type="text" id="username" name="user" required>
                     <button type="submit">Search</button>
                 </form>
+            </div>-->
+            <div class="follow-container">
+                <!-- Followed Users -->
+                <div class="follow-list-container">
+                    <h3>Followed ({{ followed_users.count }})</h3>
+                    <ul class="follow-list">
+                        {% for user in followed_users %}
+                            <li><a href="{% url 'displayuserID' user.id %}">{{ user.username }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Followers -->
+                <div class="follow-list-container">
+                    <h3>Followers ({{ followers.count }})</h3>
+                    <ul class="follow-list">
+                        {% for user in followers %}
+                            <li><a href="{% url 'displayuserID' user.id %}">{{ user.username }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>

@@ -8,4 +8,6 @@ urlpatterns = [
     path('displayuser/', views.display_user, name='displayuser'),
     path('displayuserID/<int:user_id>', views.display_userID, name='displayuserID'),
     path('update_teleporter/', views.update_teleporter, name='update_teleporter'),
+    path('follow/<int:user_id>/', views.follow_user, name='follow_user'),
+    path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow_user'),
 ]

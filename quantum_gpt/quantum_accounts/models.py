@@ -10,4 +10,5 @@ class CustomUser(AbstractUser):
     comments_made=models.IntegerField(default=0)
     experience=models.IntegerField(default=0)
     teleporter=models.TextField(default="The teleporter is empty")
+    following = models.ManyToManyField('self', related_name='followers', symmetrical=False, blank=True)
     pass
