@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account - QuantumGPT App</title>
+    <title>Quantum Discussion</title>
     <style type="text/css">
         body {
             background-color: #2c2c2c; /* Tech grey background */
@@ -144,7 +144,7 @@
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
             border-radius: 5px;
-            transition: opacity 0.3s, visibility 0.3s;
+            transition: opacity 0.6s, visibility 0.6s;
             opacity: 0;
             visibility: hidden;
         }
@@ -260,6 +260,7 @@
                 <div class="dropdown-content">
                     <a href="{% url 'index' %}">Main</a>
                     <a href="{% url 'app_page' %}">App</a>
+                    <a href="{% url 'chat_page' %}">Chat</a>
                     <a href="{% url 'myaccount' %}">Account</a>
                     <a href="{% url 'view_comments' %}">Discussions</a>
                 </div>

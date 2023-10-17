@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <title>Account - QuantumGPT App</title>
     <style type="text/css">
         body {
@@ -139,7 +140,7 @@
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
             border-radius: 5px;
-            transition: opacity 0.3s, visibility 0.3s;
+            transition: opacity 0.6s, visibility 0.6s;
             opacity: 0;
             visibility: hidden;
         }
@@ -255,6 +256,10 @@
         .follow-list li a:hover {
             text-decoration: underline; /* Underline on hover */
         }
+        #qrcode {
+            margin-top: 20px;
+            display: none; /* Initially hidden */
+        }
     </style>
 </head>
 <body>
@@ -265,6 +270,7 @@
                 <div class="dropdown-content">
                     <a href="{% url 'index' %}">Main</a>
                     <a href="{% url 'app_page' %}">App</a>
+                    <a href="{% url 'chat_page' %}">Chat</a>
                     <a href="{% url 'myaccount' %}">Account</a>
                     <a href="{% url 'view_comments' %}">Discussions</a>
                 </div>
@@ -273,6 +279,8 @@
         </div>
         <div class="response-container">
             <h2>User Information</h2>
+            <button id="generateQRCode">Generate QR Code</button>
+            <div id="qrcode"></div>
             <p><strong>Username:</strong> {{ request.user.username }}</p>
             <p><strong>Questions Asked:</strong> {{ question_asked }}</p>
             <p><strong>Comments Made:</strong> {{ comments_made }}</p>
@@ -318,6 +326,21 @@
         </div>
     </div>
     <script>
+        document.getElementById('generateQRCode').addEventListener('click', function() {
+            var qrCodeContainer = document.getElementById('qrcode');
+            
+            if (qrCodeContainer.style.display === "none" || qrCodeContainer.style.display === "") {
+                qrCodeContainer.innerHTML = ""; // Clear the previous QR code
+                var qrcode = new QRCode(document.getElementById("qrcode"), {
+                    text: "www.quantumgpt.science/displayuserID/"+ {{ request.user.id }}, // Replace with the URL of the user's profile
+                    width: 128,
+                    height: 128
+                });
+                qrCodeContainer.style.display = "block"; // Show the QR code container
+            } else {
+                qrCodeContainer.style.display = "none"; // Hide the QR code container
+            }
+        });
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");

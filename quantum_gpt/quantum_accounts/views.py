@@ -90,6 +90,12 @@ def display_user(request):
             return redirect('myaccount')  # Redirect to a different page
     return redirect('myaccount')
 
+def search_user(request):
+    username_query = request.GET.get('username')
+    users = CustomUser.objects.filter(username__icontains=username_query)
+    user_data = [{'username': user.username} for user in users]
+    return JsonResponse({'users': user_data})
+
 def display_userID(request, user_id):
     try:
         obj = CustomUser.objects.get(id=user_id)
@@ -138,3 +144,19 @@ def unfollow_user(request, user_id):
     user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
     request.user.following.remove(user_to_unfollow)
     return display_userID(request, user_id)  # Redirect to a suitable view, e.g., user's profile
+
+@login_required
+def get_followed_and_followers(request):
+    user = request.user
+
+    # Fetching followed users
+    followed_users = user.following.all().values('id', 'username')
+
+    # Fetching followers
+    followers = user.followers.all().values('id', 'username')
+
+    return JsonResponse({
+        'followed': list(followed_users),
+        'followers': list(followers),
+    })
+    

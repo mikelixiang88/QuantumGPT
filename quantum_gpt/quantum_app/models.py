@@ -10,7 +10,6 @@ from django.db import models
 #    question = models.TextField()
 #    response = models.TextField()
 
-from django.db import models
 
 class UserComment(models.Model):
     CORRECTNESS_CHOICES = [

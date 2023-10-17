@@ -1,0 +1,826 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Chat</title>
+    <style type="text/css">
+        body {
+            background-color: #2c2c2c; /* Tech grey background */
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            padding: 50px 0;
+        }
+        .app-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .sidebar {
+            flex: 0.7; /* Make the sidebar narrower */
+            padding: 20px;
+            border-right: 1px solid #00bcd4;
+            height: 80vh;
+            overflow-y: auto;
+        }
+        .response-container {
+            flex: 3.3; /* Adjust the width to fill the remaining space */
+            padding: 20px;
+            height: 80vh;
+            overflow-y: auto;
+        }
+        .response-container a {
+            color: #00bcd4;
+            text-decoration: none;
+        }
+
+        .input-section {
+            width: 80%; /* Set the width to match the textarea */
+            margin: 0 auto;
+        }
+        .input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%; /* Set to full width of the parent */
+        }
+        textarea {
+            width: calc(100% - 90px); /* Adjusted width to account for the button */
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+            vertical-align: middle;
+        }
+        .enter-button {
+            position: absolute;
+            right: 70px; /* Adjusted to align with the right side of the textarea */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c2c2c;
+            background-color: #00bcd4;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 0px;
+        }
+        button {
+            position: static;
+            right: 70px; /* Adjusted to align with the right side of the textarea */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c2c2c;
+            background-color: #00bcd4;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 25px;
+        }
+        button:hover {
+            background-color: #008ba3;
+        }
+        .session-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .session-list li {
+            padding: 10px;
+            border: 1px solid #00bcd4;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .session-list li.active {
+            background-color: #4c4c4c;
+        }
+
+        .session-button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left, similar to li */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .session-button.active {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+        .no-margin-top {
+            margin-top: 0;
+        }
+        /* Dropdown Container */
+        .dropdown {
+            margin-bottom: 0; /* Add some space between the dropdown and the "Clear" button */
+        }
+
+        /* Dropdown Button */
+        .dropbtn {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        /* Dropdown Content */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #4c4c4c;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            transition: opacity 0.6s, visibility 0.6s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Dropdown Links */
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Hover Effect */
+        .dropdown-content a:hover {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+
+        /* Show Dropdown on Hover */
+        .dropdown:hover .dropdown-content {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        /* Change color of the button on hover */
+        .dropbtn:hover {
+            background-color: #008ba3;
+        }
+
+        .teleporter-container {
+            position: relative;
+        }
+
+        .teleporter-text {
+            border: 1px solid #00bcd4; /* Set the border color to match the design */
+            width: 80%;
+            border-radius: 5px; /* Add rounded corners */
+            padding: 10px; /* Add some padding inside the border */
+            display: none;
+        }
+
+        .teleporter-text, .edit-teleporter, .save-teleporter {
+            display: none;
+        }
+
+        .teleporter-text.visible, .edit-teleporter.visible, .save-teleporter.visible {
+            display: block;
+        }
+
+        textarea.editable-teleporter {
+            width: 80%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+        }
+        .search-user-container {
+            margin-top: 20px; /* Add some space above the search user container */
+        }
+
+        #searchUserForm {
+            display: flex;
+            align-items: center; /* Vertically align the label, input, and button */
+        }
+
+        #searchUserForm label,
+        #searchUserForm input,
+        #searchUserForm button {
+            margin-right: 10px; /* Add some space between the label, input, and button */
+        }
+
+        #searchUserForm button {
+            align-self: flex-end; /* Align the button to the bottom of the container */
+        }
+        .comment-section {
+            margin-top: 20px;
+            border: 1px solid #00bcd4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .comment-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .comment-list li {
+            margin-top: 10px;
+        }
+
+        .comment-list a {
+            color: #00bcd4;
+            text-decoration: none;
+        }
+
+        .comment-list a:hover {
+            text-decoration: underline;
+        }
+        .comment-list button {
+            vertical-align: middle;
+        }
+        
+
+        .chat-window {
+            width: 65%;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #00bcd4;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: scroll;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .chat-input {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-input textarea {
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            padding: 10px;
+            color: #ffffff;
+            background-color: #4c4c4c;
+        }
+
+        .chat-input button {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .chat-input button:hover {
+            background-color: #008ba3;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="dropdown">
+                <button class="dropbtn">Menu</button>
+                <div class="dropdown-content">
+                    <a href="{% url 'index' %}">Main</a>
+                    <a href="{% url 'app_page' %}">App</a>
+                    <a href="{% url 'chat_page' %}">Chat</a>
+                    <a href="{% url 'myaccount' %}">Account</a>
+                    <a href="{% url 'view_comments' %}">Discussions</a>
+                </div>
+            </div>
+            <button onclick="initiateChat()">Initiate Chat</button>
+            <ul id="chatSessionList" style="color: #00bcd4;">
+                <!-- Chat session list items will go here -->
+            </ul>
+        </div>
+        <div class="response-container">
+            <div class="chat-header">
+                <h3 id="chatTitle">No Chat Session Selected</h3>
+            </div>
+            <div id="operation">
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Chat messages will go here -->
+            </div>
+        </div>
+    </div>
+    <div class="input-section">
+        <div class="input-wrapper">
+            <textarea id="messageInput" rows="2" placeholder="Type your message here..."></textarea>
+            <button class="enter-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadChatSessions(); // Load chat sessions when the page loads
+        });
+
+        var pusher = new Pusher("f78938341d8a7ccb7e17", {
+          cluster: "us3",
+        });
+        pusher.connection.bind('connected', function() {
+          console.log('Connected to Pusher');
+        });
+
+        pusher.connection.bind('disconnected', function() {
+          console.log('Disconnected from Pusher');
+        });
+
+        pusher.connection.bind('reconnecting', function() {
+          console.log('Reconnecting to Pusher');
+        });
+        let currentSessionId = null;
+        let displayedMessageIds = [];
+        let is_owner = false;
+
+        function selectUser(users, message) {
+            return new Promise((resolve, reject) => {
+                // Get the operation div
+                let operationDiv = document.getElementById('operation');
+                operationDiv.innerHTML = ''; // Clear previous content
+
+                // Create a title or message
+                let title = document.createElement('h2');
+                title.innerText = message;
+                operationDiv.appendChild(title);
+
+                // Create a list of users with checkboxes
+                users.forEach(user => {
+                    let checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `user_${user.id}`;
+                    checkbox.value = user.id;
+
+                    let label = document.createElement('label');
+                    label.htmlFor = `user_${user.id}`;
+                    label.innerText = user.username;
+
+                    operationDiv.appendChild(checkbox);
+                    operationDiv.appendChild(label);
+                    operationDiv.appendChild(document.createElement('br'));
+                });
+
+                // Create a submit button
+                let submitButton = document.createElement('button');
+                submitButton.innerText = 'Submit';
+                submitButton.onclick = () => {
+                    let selectedUsers = [];
+                    users.forEach(user => {
+                        if (document.getElementById(`user_${user.id}`).checked) {
+                            selectedUsers.push(user);
+                        }
+                    });
+                    resolve(selectedUsers);
+                    operationDiv.innerHTML='';
+                    // Create buttons
+                    const addButton = document.createElement('button');
+                    addButton.textContent = 'Add Participants';
+                    addButton.addEventListener('click', function(){
+                        addParticipants(sessionId);
+                    });
+
+                    const leaveButton = document.createElement('button');
+                    leaveButton.textContent = 'Leave';
+                    leaveButton.addEventListener('click', function() {
+                        leaveChat(sessionId);
+                    });
+
+                    // Append buttons to the parent element
+                    operationDiv.appendChild(addButton);
+                    operationDiv.appendChild(leaveButton);
+
+                    // Check if the user is an owner and add more buttons accordingly
+                    if (is_owner) {
+                        const transferButton = document.createElement('button');
+                        transferButton.textContent = 'Transfer';
+                        transferButton.addEventListener('click', function() {
+                            transferOwnership(sessionId, newOwnerId);
+                        });
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove Participant';
+                        removeButton.addEventListener('click', function() {
+                            removeParticipants(sessionId, participantId)
+                        });
+
+                        operationDiv.appendChild(transferButton);
+                        operationDiv.appendChild(removeButton);
+                    }
+ 
+                };
+                operationDiv.appendChild(submitButton);
+
+                // Create a cancel button
+                let cancelButton = document.createElement('button');
+                cancelButton.innerText = 'Cancel';
+                cancelButton.onclick = () => {
+                    reject('User selection was cancelled.');
+                    // Create buttons
+                    operationDiv.innerHTML='';
+                    const addButton = document.createElement('button');
+                    addButton.textContent = 'Add Participants';
+                    addButton.addEventListener('click', function(){
+                        addParticipants(sessionId);
+                    });
+
+                    const leaveButton = document.createElement('button');
+                    leaveButton.textContent = 'Leave';
+                    leaveButton.addEventListener('click', function() {
+                        leaveChat(sessionId);
+                    });
+
+                    // Append buttons to the parent element
+                    operationDiv.appendChild(addButton);
+                    operationDiv.appendChild(leaveButton);
+
+                    // Check if the user is an owner and add more buttons accordingly
+                    if (is_owner) {
+                        const transferButton = document.createElement('button');
+                        transferButton.textContent = 'Transfer';
+                        transferButton.addEventListener('click', function() {
+                            transferOwnership(sessionId, newOwnerId);
+                        });
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove Participant';
+                        removeButton.addEventListener('click', function() {
+                            removeParticipants(sessionId, participantId)
+                        });
+
+                        operationDiv.appendChild(transferButton);
+                        operationDiv.appendChild(removeButton);
+                    } 
+                    
+                };
+                operationDiv.appendChild(cancelButton);
+            });
+        }
+
+
+        function loadChatSessions(sessionId) {
+            // Load chat sessions from the server and display them in the chat session list
+            fetch('/chat_sessions/')
+                .then(response => response.json())
+                .then(data => {
+                    const sessions = data.chat_sessions; // Extract chat_sessions from the data
+                    const sessionList = document.getElementById('chatSessionList');
+                    sessionList.innerHTML = '';
+
+                    // If sessionId is provided, find and move it to the top of the sessions array
+                    if (sessionId !== undefined) {
+                        const sessionIndex = sessions.findIndex(session => session.id === sessionId);
+                        if (sessionIndex !== -1) {
+                            const [selectedSession] = sessions.splice(sessionIndex, 1);
+                            sessions.unshift(selectedSession);
+                        }
+                    }
+
+                    sessions.forEach(session => {
+                        const li = document.createElement('li');
+                        
+                        // You can customize this part to display the information you prefer
+                        li.textContent = `${session.title}`;
+                        
+                        li.onclick = function () {
+                            openChatSession(session.id, session.title);
+                        };
+                        sessionList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading chat sessions:', error);
+                });
+        }
+
+
+        function openChatSession(sessionId, chatTitle) {
+            const pusherChannel = pusher.subscribe(`chat-${sessionId}`);
+            
+            // Bind to a Pusher event when a new message is triggered for this session
+            pusherChannel.bind("new-message", function (data) {
+                if (!displayedMessageIds.includes(data.message_id)) {
+                    // If not, add it to the list and display the message
+                    console.log("New message received via Pusher:", data);
+                    displayedMessageIds.push(data.message_id);
+
+                    // Access the username and message content from the event data
+                    const username = data.username;
+                    const content = data.message.content;
+                    const userID = data.userID;
+
+                    // Display the message with the username
+                    const usernameLink = document.createElement('a');
+                    usernameLink.textContent = `${username}`;
+                    usernameLink.href = `/displayuserID/${userID}`;
+                    const messageSpan = document.createElement('span');
+                    messageSpan.appendChild(usernameLink);
+                    messageSpan.appendChild(document.createTextNode(`: ${content}`));
+                    const messageContainer = document.getElementById('chatMessages');
+                    const p = document.createElement('p');
+                    p.appendChild(messageSpan);
+                    messageContainer.appendChild(p);
+                }
+            });
+
+            let titleDiv = document.getElementById('chatTitle');
+            titleDiv.innerHTML=`${chatTitle}`;
+
+            // Load and display messages for the specified chat session
+            currentSessionId = sessionId;
+            let operationDiv = document.getElementById('operation');
+            operationDiv.innerHTML = '';
+
+            // Create buttons
+            const addButton = document.createElement('button');
+            addButton.textContent = 'Add Participants';
+            addButton.addEventListener('click', function () {
+                addParticipants(sessionId);
+            });
+
+            const leaveButton = document.createElement('button');
+            leaveButton.textContent = 'Leave';
+            leaveButton.addEventListener('click', function () {
+                leaveChat(sessionId);
+            });
+
+            // Append buttons to the parent element
+            operationDiv.appendChild(addButton);
+            operationDiv.appendChild(leaveButton);
+
+            
+
+            fetch(`/open_chat/${sessionId}/messages/`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.owner=="{{ request.user.id }}"){
+                        is_owner=true;
+                    }else{
+                        is_owner=false;
+                    }
+                    // Check if the user is an owner and add more buttons accordingly
+                    if (is_owner) {
+                        const transferButton = document.createElement('button');
+                        transferButton.textContent = 'Transfer';
+                        transferButton.addEventListener('click', function() {
+                            transferOwnership(sessionId);
+                        });
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove Participant';
+                        removeButton.addEventListener('click', function() {
+                            removeParticipants(sessionId)
+                        });
+
+                        operationDiv.appendChild(transferButton);
+                        operationDiv.appendChild(removeButton);
+                    }
+                    if (Array.isArray(data.messages)) {
+                        const messageContainer = document.getElementById('chatMessages');
+                        messageContainer.innerHTML = '';
+                        data.messages.forEach(message => {
+                            const username = message.sender;
+                            const content = message.content;
+                            const userID = message.senderID;
+
+                            // Display the message with the username
+                            const usernameLink = document.createElement('a');
+                            usernameLink.textContent = `${username}`;
+                            usernameLink.href = `/displayuserID/${userID}`;
+                            const messageSpan = document.createElement('span');
+                            messageSpan.appendChild(usernameLink);
+                            messageSpan.appendChild(document.createTextNode(`: ${content}`));
+                            const messageContainer = document.getElementById('chatMessages');
+                            const p = document.createElement('p');
+                            p.appendChild(messageSpan);
+                            messageContainer.appendChild(p);
+                        });
+                    } else {
+                        console.error('API response does not contain a valid messages array:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching and processing messages:', error);
+                });
+        }
+
+
+        function initiateChat(selectedUsers) {
+            const cTitle = window.prompt('Enter chat title:');
+            fetch('/init_chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ participants: selectedUsers, title: cTitle })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Chat session initiated successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to initiate chat session.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function leaveChat(sessionId, isOwner) {
+            if (isOwner && !confirm('Are you sure you want to leave? The chat session will be deleted.')) {
+                return;
+            }
+            currentSessionId=null;
+
+            fetch(`/chat/${sessionId}/leave/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Left the chat session successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to leave the chat session.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function addParticipants(sessionId) {
+            // Fetch the followers and followed users
+            fetch('/get_followed_and_followers/')
+                .then(response => response.json())
+                .then(data => {
+                    let users = data.followed.concat(data.followers);
+                    selectUser(users, 'Select users to add to the chat')
+                        .then(selectedUsers => {
+                            let userIds = selectedUsers.map(user => user.id);
+                            fetch(`/chat/${sessionId}/add/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                body: JSON.stringify({ participants: userIds })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Participants added to the chat!');
+                                    location.reload();
+                                } else {
+                                    alert('Failed to add participants.');
+                                }
+                            })
+                            .catch(error => console.error('Error:', error));
+                        })
+                        .catch(error => console.error('Error:', error));
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+
+        function removeParticipants(sessionId) {
+            fetch(`/get_participants/${sessionId}`)
+            .then(response => response.json())
+            .then(data => {
+                let participants = data.participants;
+                selectUser(participants, 'Select users to remove from the chat')
+                    .then(selectedUsers => {
+                        let usersToRemove = selectedUsers.map(user => user.id);
+                        fetch(`/chat/${sessionId}/remove/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ participants: usersToRemove })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Participants removed!');
+                                location.reload();
+                            } else {
+                                alert('Failed to remove participants.');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    })
+                    .catch(error => console.error('Error:', error));
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function transferOwnership(sessionId) {
+            fetch(`/get_participants/${sessionId}`)
+            .then(response => response.json())
+            .then(data => {
+                let participants = data.participants;
+                selectUser(participants, 'Select users to transfer')
+                    .then(selectedUsers => {
+                        if (selectedUsers.length === 1) {
+                        let new_ownerID = selectedUsers[0].id;
+                        fetch(`/chat/${sessionId}/transfer_ownership/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ new_owner_id: new_ownerID })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Ownership transferred successfully!!');
+                                    location.reload();
+                                } else {
+                                    alert('Failed to transfer ownership.');
+                                }
+                            })
+                            .catch(error => console.error('Error:', error));
+                        } else {
+                            alert('Please select exactly one user to transfer ownership.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            if (message === '') {
+                alert('Message cannot be empty');
+                return;
+            }
+
+            // Include the required fields in the JSON payload
+            const payload = {
+                chat_session: currentSessionId, // Replace with the actual chat session ID
+                sender: {{ request.user.id }}, // Replace with the actual sender's ID
+                content: message,
+            };
+
+            fetch(`/chat/${currentSessionId}/send_message/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload) // Send the payload with required fields
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageInput.value = ''; // Clear the input field
+                let titleDiv = document.getElementById('chatTitle');
+                title = titleDiv.innerHTML;
+                openChatSession(currentSessionId, title); // Refresh the chat messages
+            });
+        }
+
+
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+
+    </script>
+</body>
+</html>
