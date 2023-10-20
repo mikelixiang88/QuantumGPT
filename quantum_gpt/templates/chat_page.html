@@ -299,6 +299,21 @@
         .chat-input button:hover {
             background-color: #008ba3;
         }
+        .popup {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            width: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2c2c2c;  /* Updated background color */
+            padding: 20px;
+            z-index: 1000;  // Ensure the popup appears on top of other elements
+            color: #00bcd4; 
+        }
+        .popup a {
+            color: #00bcd4;
+            text-decoration: none;
+        }
 
     </style>
 </head>
@@ -316,7 +331,7 @@
                 </div>
             </div>
             <button onclick="initiateChat()">Initiate Chat</button>
-            <ul id="chatSessionList" style="color: #00bcd4;">
+            <ul id="chatSessionList" class="session-list">
                 <!-- Chat session list items will go here -->
             </ul>
         </div>
@@ -339,9 +354,6 @@
     </div>
     <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            loadChatSessions(); // Load chat sessions when the page loads
-        });
 
         var pusher = new Pusher("f78938341d8a7ccb7e17", {
           cluster: "us3",
@@ -357,10 +369,26 @@
         pusher.connection.bind('reconnecting', function() {
           console.log('Reconnecting to Pusher');
         });
-        let currentSessionId = null;
         let displayedMessageIds = [];
         let is_owner = false;
         let currentChannel = null; 
+        let currentSessionId = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadChatSessions();
+            // Subscribe to a single channel for updates about all chat sessions
+            const updatesChannel = pusher.subscribe('chat-updates');
+
+            // Listen for new message events
+            updatesChannel.bind("new-message", function (data) {
+                // Assuming data contains a sessionId property indicating the session that has a new message
+                if (data && data.sessionId) {
+                    // Reload the chat sessions list, moving the updated session to the top
+                    loadChatSessions(data.sessionId);
+                }
+            });
+        });
+
 
         function selectUser(users, message) {
             return new Promise((resolve, reject) => {
@@ -404,36 +432,54 @@
                     // Create buttons
                     const addButton = document.createElement('button');
                     addButton.textContent = 'Add Participants';
-                    addButton.addEventListener('click', function(){
-                        addParticipants(sessionId);
+                    addButton.addEventListener('click', function () {
+                        addParticipants(currentSessionId);
                     });
 
                     const leaveButton = document.createElement('button');
                     leaveButton.textContent = 'Leave';
-                    leaveButton.addEventListener('click', function() {
-                        leaveChat(sessionId);
+                    leaveButton.addEventListener('click', function () {
+                        leaveChat(currentSessionId);
+                    });
+
+                    const viewP = document.createElement('button');
+                    viewP.textContent = 'View Participant';
+                    viewP.addEventListener('click', function () {
+                        viewParticipants(currentSessionId);
                     });
 
                     // Append buttons to the parent element
-                    operationDiv.appendChild(addButton);
-                    operationDiv.appendChild(leaveButton);
+                    const row1 = document.createElement('div');
+                    operationDiv.appendChild(row1);
+                    row1.appendChild(addButton);
+                    row1.appendChild(leaveButton);
+                    row1.appendChild(viewP);
 
                     // Check if the user is an owner and add more buttons accordingly
                     if (is_owner) {
                         const transferButton = document.createElement('button');
                         transferButton.textContent = 'Transfer';
                         transferButton.addEventListener('click', function() {
-                            transferOwnership(sessionId, newOwnerId);
+                            transferOwnership(currentSessionId);
                         });
 
                         const removeButton = document.createElement('button');
                         removeButton.textContent = 'Remove Participant';
                         removeButton.addEventListener('click', function() {
-                            removeParticipants(sessionId, participantId)
+                            removeParticipants(currentSessionId);
                         });
 
-                        operationDiv.appendChild(transferButton);
-                        operationDiv.appendChild(removeButton);
+                        const changetitleButton = document.createElement('button');
+                        changetitleButton.textContent = 'Change Title';
+                        changetitleButton.addEventListener('click', function() {
+                            changeName(currentSessionId);
+                        });
+
+                        const row2 = document.createElement('div');
+                        operationDiv.appendChild(row2);
+                        row2.appendChild(transferButton);
+                        row2.appendChild(removeButton);
+                        row2.appendChild(changetitleButton);
                     }
  
                 };
@@ -446,38 +492,57 @@
                     reject('User selection was cancelled.');
                     // Create buttons
                     operationDiv.innerHTML='';
+                    // Create buttons
                     const addButton = document.createElement('button');
                     addButton.textContent = 'Add Participants';
-                    addButton.addEventListener('click', function(){
-                        addParticipants(sessionId);
+                    addButton.addEventListener('click', function () {
+                        addParticipants(currentSessionId);
                     });
 
                     const leaveButton = document.createElement('button');
                     leaveButton.textContent = 'Leave';
-                    leaveButton.addEventListener('click', function() {
-                        leaveChat(sessionId);
+                    leaveButton.addEventListener('click', function () {
+                        leaveChat(currentSessionId);
+                    });
+
+                    const viewP = document.createElement('button');
+                    viewP.textContent = 'View Participant';
+                    viewP.addEventListener('click', function () {
+                        viewParticipants(currentSessionId);
                     });
 
                     // Append buttons to the parent element
-                    operationDiv.appendChild(addButton);
-                    operationDiv.appendChild(leaveButton);
+                    const row1 = document.createElement('div');
+                    operationDiv.appendChild(row1);
+                    row1.appendChild(addButton);
+                    row1.appendChild(leaveButton);
+                    row1.appendChild(viewP);
 
                     // Check if the user is an owner and add more buttons accordingly
                     if (is_owner) {
                         const transferButton = document.createElement('button');
                         transferButton.textContent = 'Transfer';
                         transferButton.addEventListener('click', function() {
-                            transferOwnership(sessionId, newOwnerId);
+                            transferOwnership(currentSessionId);
                         });
 
                         const removeButton = document.createElement('button');
                         removeButton.textContent = 'Remove Participant';
                         removeButton.addEventListener('click', function() {
-                            removeParticipants(sessionId, participantId)
+                            removeParticipants(currentSessionId);
                         });
 
-                        operationDiv.appendChild(transferButton);
-                        operationDiv.appendChild(removeButton);
+                        const changetitleButton = document.createElement('button');
+                        changetitleButton.textContent = 'Change Title';
+                        changetitleButton.addEventListener('click', function() {
+                            changeName(currentSessionId);
+                        });
+
+                        const row2 = document.createElement('div');
+                        operationDiv.appendChild(row2);
+                        row2.appendChild(transferButton);
+                        row2.appendChild(removeButton);
+                        row2.appendChild(changetitleButton);
                     } 
                     
                 };
@@ -495,8 +560,16 @@
                     const sessionList = document.getElementById('chatSessionList');
                     sessionList.innerHTML = '';
 
+
                     // If sessionId is provided, find and move it to the top of the sessions array
                     if (sessionId !== undefined) {
+                        // Check if sessionId exists in the array
+                        const sessionExists = sessions.some(session => session.id === sessionId);
+
+                        if (!sessionExists) {
+                            // If sessionId does not exist, exit the function early
+                            return;
+                        }
                         const sessionIndex = sessions.findIndex(session => session.id === sessionId);
                         if (sessionIndex !== -1) {
                             const [selectedSession] = sessions.splice(sessionIndex, 1);
@@ -505,15 +578,16 @@
                     }
 
                     sessions.forEach(session => {
-                        const li = document.createElement('li');
+                        const button = document.createElement('button');
                         
                         // You can customize this part to display the information you prefer
-                        li.textContent = `${session.title}`;
+                        button.textContent = `${session.title}`;
+                        button.className = 'session-button';
                         
-                        li.onclick = function () {
+                        button.onclick = function () {
                             openChatSession(session.id, session.title);
                         };
-                        sessionList.appendChild(li);
+                        sessionList.appendChild(button);
                     });
                 })
                 .catch(error => {
@@ -555,6 +629,7 @@
                     const p = document.createElement('p');
                     p.appendChild(messageSpan);
                     messageContainer.appendChild(p);
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
                 }
             });
 
@@ -579,9 +654,19 @@
                 leaveChat(sessionId);
             });
 
+            const viewP = document.createElement('button');
+            viewP.textContent = 'View Participant';
+            viewP.addEventListener('click', function () {
+                viewParticipants(sessionId);
+            });
+
             // Append buttons to the parent element
-            operationDiv.appendChild(addButton);
-            operationDiv.appendChild(leaveButton);
+            const row1 = document.createElement('div');
+            operationDiv.appendChild(row1);
+            row1.appendChild(addButton);
+            row1.appendChild(leaveButton);
+            row1.appendChild(viewP);
+
 
             
 
@@ -604,11 +689,21 @@
                         const removeButton = document.createElement('button');
                         removeButton.textContent = 'Remove Participant';
                         removeButton.addEventListener('click', function() {
-                            removeParticipants(sessionId)
+                            removeParticipants(sessionId);
                         });
 
-                        operationDiv.appendChild(transferButton);
-                        operationDiv.appendChild(removeButton);
+                        const changetitleButton = document.createElement('button');
+                        changetitleButton.textContent = 'Change Title';
+                        changetitleButton.addEventListener('click', function() {
+                            changeName(sessionId);
+                        });
+
+                        const row2 = document.createElement('div');
+                        operationDiv.appendChild(row2);
+                        row2.appendChild(transferButton);
+                        row2.appendChild(removeButton);
+                        row2.appendChild(changetitleButton);
+
                     }
                     if (Array.isArray(data.messages)) {
                         const messageContainer = document.getElementById('chatMessages');
@@ -629,6 +724,7 @@
                             const p = document.createElement('p');
                             p.appendChild(messageSpan);
                             messageContainer.appendChild(p);
+                            messageContainer.scrollTop = messageContainer.scrollHeight;
                         });
                     } else {
                         console.error('API response does not contain a valid messages array:', data);
@@ -748,6 +844,76 @@
                         .catch(error => console.error('Error:', error));
                     })
                     .catch(error => console.error('Error:', error));
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function viewParticipants(sessionId){
+            fetch(`/get_participants/${sessionId}`)
+            .then(response => response.json())
+            .then(data => {
+                let participants = data.participants;
+                let owner = data.owner;
+
+                // Create a popup div
+                let popup = document.createElement('div');
+                popup.className = 'popup';
+                document.body.appendChild(popup);
+
+                // Create a heading for the owner
+                let ownerHeading = document.createElement('h2');
+                ownerHeading.textContent = 'Owner';
+                popup.appendChild(ownerHeading);
+
+                // Display the owner with a link to their profile
+                let ownerLink = document.createElement('a');
+                ownerLink.href = `/displayuserID/${owner.id}`;
+                ownerLink.textContent = owner.username;
+                popup.appendChild(ownerLink);
+
+                // Create a heading for the participants
+                let participantsHeading = document.createElement('h2');
+                participantsHeading.textContent = 'Participants';
+                popup.appendChild(participantsHeading);
+
+                // Display each participant with a link to their profile
+                participants.forEach(participant => {
+                    let participantLink = document.createElement('a');
+                    participantLink.href = `/displayuserID/${participant.id}`;
+                    participantLink.textContent = participant.username;
+                    popup.appendChild(participantLink);
+                    popup.appendChild(document.createElement('br'));  // Add a line break between participants
+                });
+
+                // Optional: Add a close button to the popup
+                let closeButton = document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.onclick = function () {
+                    document.body.removeChild(popup);
+                };
+                popup.appendChild(closeButton);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function changeName(sessionId) {
+            const cTitle = window.prompt('Enter chat title:');
+            fetch(`/chat/${sessionId}/changetitle/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ title: cTitle })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Title changed!');
+                    location.reload();
+                } else {
+                    alert('Failed to change title.');
+                }
             })
             .catch(error => console.error('Error:', error));
         }

@@ -6,6 +6,7 @@ class ChatSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.TextField(default="untitled")
     owner = models.ForeignKey('quantum_accounts.CustomUser', on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Message(models.Model):
     chat_session = models.ForeignKey(ChatSession, on_delete=models.CASCADE)

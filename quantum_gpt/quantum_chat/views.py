@@ -11,6 +11,8 @@ import json
 from django.contrib.auth.decorators import login_required
 from .pusher_util import pusher_client
 from .serializers import MessageSerializer, ChatSessionSerializer
+from django.utils import timezone
+
 
 
 def chat_page(request):
@@ -62,16 +64,18 @@ def add_participants(request, chat_session_id):
     return JsonResponse({"success": True, "message": f"success"}, status=200)
 
 @login_required
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def send_message(request, chat_session_id):
     # Get the ChatSession object or return a 404 response if it doesn't exist
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
 
-    if request.method == 'POST':
+    if request.method == 'POST' or request.method == 'GET':
         # Serialize the message data
         serializer = MessageSerializer(data=request.data)
+        chat_session.updated_at = timezone.now()
+        chat_session.save()
 
         # Check if the serializer is valid
         if serializer.is_valid():
@@ -87,6 +91,10 @@ def send_message(request, chat_session_id):
             pusher_event = 'new-message'
             pusher_data = {'message': serializer.data, 'message_id':message.id, 'username':request.user.username, 'userID':request.user.id}
             pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
+            pusher_channel_2 = 'chat-updates'
+            pusher_event_2 = 'new-message'
+            pusher_data_2 = {'sessionId': chat_session_id}
+            pusher_client.trigger(pusher_channel_2, pusher_event_2, pusher_data_2)
 
             # Return a successful response with the serialized data
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -125,7 +133,7 @@ def transfer_ownership(request, chat_session_id):
 @login_required
 def chat_sessions(request):
     user = request.user
-    sessions = ChatSession.objects.filter(participants=user)
+    sessions = ChatSession.objects.filter(participants=user).order_by('-updated_at')
     
     session_data = []
     for session in sessions:
@@ -166,4 +174,15 @@ def OpenSessionView(request, session_id):
 def get_participants(request, session_id):
     chat_session = get_object_or_404(ChatSession, pk=session_id)
     participants = chat_session.participants.all().values('id', 'username')
-    return JsonResponse({'participants': list(participants)})
+    owner_id = chat_session.owner.id
+    owner_username = chat_session.owner.username
+    return JsonResponse({'owner': {'id': owner_id,'username': owner_username},'participants': list(participants)})
+
+@api_view(['POST'])
+def changetitle(request, chat_session_id):
+    chat_session = get_object_or_404(ChatSession, id=chat_session_id)
+    if request.user != chat_session.owner:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+    chat_session.title=request.data.get('title')
+    chat_session.save()
+    return JsonResponse({"success": True, "message": f"success"}, status=200)
