@@ -360,6 +360,7 @@
         let currentSessionId = null;
         let displayedMessageIds = [];
         let is_owner = false;
+        let currentChannel = null; 
 
         function selectUser(users, message) {
             return new Promise((resolve, reject) => {
@@ -522,13 +523,20 @@
 
 
         function openChatSession(sessionId, chatTitle) {
-            const pusherChannel = pusher.subscribe(`chat-${sessionId}`);
             
             // Bind to a Pusher event when a new message is triggered for this session
-            pusherChannel.bind("new-message", function (data) {
+            if (currentChannel) {
+                currentChannel.unbind("new-message");
+                pusher.unsubscribe(currentChannel.name);
+            }
+
+            // Subscribe to the new channel
+            currentChannel = pusher.subscribe(`chat-${sessionId}`);
+            
+            // Bind to a Pusher event when a new message is triggered for this session
+            currentChannel.bind("new-message", function (data) {
                 if (!displayedMessageIds.includes(data.message_id)) {
                     // If not, add it to the list and display the message
-                    console.log("New message received via Pusher:", data);
                     displayedMessageIds.push(data.message_id);
 
                     // Access the username and message content from the event data

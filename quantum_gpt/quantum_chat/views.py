@@ -85,7 +85,7 @@ def send_message(request, chat_session_id):
             # Trigger a Pusher event to notify clients of the new message
             pusher_channel = f'chat-{chat_session_id}'
             pusher_event = 'new-message'
-            pusher_data = {'message': serializer.data,'username':request.user.username, 'userID':request.user.id}
+            pusher_data = {'message': serializer.data, 'message_id':message.id, 'username':request.user.username, 'userID':request.user.id}
             pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
 
             # Return a successful response with the serialized data
