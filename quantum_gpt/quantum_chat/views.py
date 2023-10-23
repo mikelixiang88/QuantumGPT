@@ -41,6 +41,7 @@ def remove_participants(request, chat_session_id):
         
 @api_view(['POST', 'GET'])
 def add_participants(request, chat_session_id):
+    action=""
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
@@ -61,7 +62,7 @@ def add_participants(request, chat_session_id):
             })
         else:
             action = "already in"  # Assign a different value if needed
-    return JsonResponse({"success": True, "message": f"success"}, status=200)
+    return JsonResponse({"success": True, "message": f"success {action}"}, status=200)
 
 @login_required
 @api_view(['POST', 'GET'])
