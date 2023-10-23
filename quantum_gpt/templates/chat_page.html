@@ -788,7 +788,17 @@
                 .then(response => response.json())
                 .then(data => {
                     let users = data.followed.concat(data.followers);
-                    selectUser(users, 'Select users to add to the chat')
+                    // Remove duplicates
+                    let uniqueUsers = [];
+                    let userIdsSet = new Set();
+                    users.forEach(user => {
+                        if (!userIdsSet.has(user.id)) {
+                            userIdsSet.add(user.id);
+                            uniqueUsers.push(user);
+                        }
+                    });
+                    
+                    selectUser(uniqueUsers, 'Select users to add to the chat')
                         .then(selectedUsers => {
                             let userIds = selectedUsers.map(user => user.id);
                             fetch(`/chat/${sessionId}/add/`, {
