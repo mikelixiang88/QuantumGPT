@@ -439,7 +439,7 @@
                     const leaveButton = document.createElement('button');
                     leaveButton.textContent = 'Leave';
                     leaveButton.addEventListener('click', function () {
-                        leaveChat(currentSessionId);
+                        leaveChat(currentSessionId, is_owner);
                     });
 
                     const viewP = document.createElement('button');
@@ -502,7 +502,7 @@
                     const leaveButton = document.createElement('button');
                     leaveButton.textContent = 'Leave';
                     leaveButton.addEventListener('click', function () {
-                        leaveChat(currentSessionId);
+                        leaveChat(currentSessionId, is_owner);
                     });
 
                     const viewP = document.createElement('button');
@@ -651,7 +651,7 @@
             const leaveButton = document.createElement('button');
             leaveButton.textContent = 'Leave';
             leaveButton.addEventListener('click', function () {
-                leaveChat(sessionId);
+                leaveChat(sessionId, is_owner);
             });
 
             const viewP = document.createElement('button');
@@ -797,7 +797,20 @@
                             uniqueUsers.push(user);
                         }
                     });
-                    
+
+                    // Fetch current participants
+                    return fetch(`/get_participants/${sessionId}`)
+                        .then(response => response.json())
+                        .then(participantData => {
+                            let participants = participantData.participants.map(user => user.id);
+
+                            // Remove existing participants from uniqueUsers
+                            uniqueUsers = uniqueUsers.filter(user => !participants.includes(user.id));
+                            
+                            return uniqueUsers;
+                        });
+                })
+                .then(uniqueUsers => {
                     selectUser(uniqueUsers, 'Select users to add to the chat')
                         .then(selectedUsers => {
                             let userIds = selectedUsers.map(user => user.id);
@@ -826,11 +839,14 @@
         }
 
 
+
         function removeParticipants(sessionId) {
             fetch(`/get_participants/${sessionId}`)
             .then(response => response.json())
             .then(data => {
                 let participants = data.participants;
+                // Filter out the current user from the list of participants
+                participants = participants.filter(user => user.id !== {{ request.user.id }});
                 selectUser(participants, 'Select users to remove from the chat')
                     .then(selectedUsers => {
                         let usersToRemove = selectedUsers.map(user => user.id);
@@ -933,6 +949,8 @@
             .then(response => response.json())
             .then(data => {
                 let participants = data.participants;
+                // Filter out the current user from the list of participants
+                participants = participants.filter(user => user.id !== {{ request.user.id }});
                 selectUser(participants, 'Select users to transfer')
                     .then(selectedUsers => {
                         if (selectedUsers.length === 1) {

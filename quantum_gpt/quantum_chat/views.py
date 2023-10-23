@@ -50,11 +50,9 @@ def add_participants(request, chat_session_id):
         user_ids = request.data.get('participants')
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON data"}, status=400)
-    # Assuming 'participants' is a list of user IDs
     for user_id in user_ids:
         user = get_object_or_404(CustomUser, id=user_id)
-        chat_sessions_with_user = ChatSession.objects.filter(participants=user)
-        if not chat_sessions_with_user.exists():
+        if user not in chat_session.participants.all():
             chat_session.participants.add(user)
             action = "added to"
             pusher_client.trigger(f'chat_{chat_session_id}', 'participant_added', {
