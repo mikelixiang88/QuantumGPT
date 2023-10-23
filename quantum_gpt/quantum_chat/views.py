@@ -39,7 +39,7 @@ def remove_participants(request, chat_session_id):
         chat_session.participants.remove(user)
     return JsonResponse({"success": True, "message": f"success"}, status=200)
         
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def add_participants(request, chat_session_id):
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
