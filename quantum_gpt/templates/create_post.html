@@ -303,7 +303,7 @@
                     <a href="{% url 'chat_page' %}">Chat</a>
                     <a href="{% url 'myaccount' %}">Account</a>
                     <a href="{% url 'view_comments' %}">Discussions</a>
-                    <a href="{% url 'blog_index' %}">Blog</a>
+                    <a href="{% url 'blog_index' %}">Article</a>
                 </div>
             </div>
             <ul class="session-list">
@@ -316,7 +316,7 @@
             </div>
         </div>
         <div class="response-container">
-            <h2>Create Blog Post</h2>
+            <h2>Create Article Post</h2>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ form.media }}

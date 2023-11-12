@@ -236,7 +236,7 @@
                     <a href="{% url 'chat_page' %}">Chat</a>
                     <a href="{% url 'myaccount' %}">Account</a>
                     <a href="{% url 'view_comments' %}">Discussions</a>
-                    <a href="{% url 'blog_index' %}">Blog</a>
+                    <a href="{% url 'blog_index' %}">Article</a>
                 </div>
             </div>
             <!-- Additional Sidebar Content if needed -->
@@ -266,7 +266,7 @@
                 <div class="teleporter-text visible" id="teleporterText"> {{ teleporter }} </div>
             </div>
             <div class="user-posts">
-                <h3>Blog Posts</h3>
+                <h3>Article</h3>
                 {% for post in user_posts %}
                     <div class="post-preview">
                         <a href="{% url 'blog_detail' post.id %}">{{ post.title }}</a>
