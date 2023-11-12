@@ -11,6 +11,7 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
+from q_blog.models import Post
 
 def register_view(request):
     if request.method == 'POST':
@@ -44,12 +45,15 @@ def check_account(request):
         question_asked=request.user.question_asked
         experience=request.user.experience
         teleporter=request.user.teleporter
+        user_posts = Post.objects.filter(author=request.user).order_by('-created_on')
     else:
         questions_left = 0
         comments_made = 0
         question_asked=0
         experience=0
         teleporter="teleporter is empty"
+        user_posts={}
+        
 
     context = {
         'question_left': question_token,
@@ -57,6 +61,7 @@ def check_account(request):
         'question_asked': question_asked,
         'experience': experience,
         'followed_users': followed_users,
+        'user_posts': user_posts,
         'followers': followers,
     }
 
@@ -72,6 +77,7 @@ def display_user(request):
             question_asked=obj.question_asked
             comments_made=obj.comments_made
             user_id=obj.id
+            user_posts = Post.objects.filter(author=obj).order_by('-created_on')
             context = {
                 'other_user': obj,
                 'username': usern,
@@ -80,6 +86,7 @@ def display_user(request):
                 'comments_made': comments_made,
                 'question_asked': question_asked,
                 'experience': experience,
+                'user_posts': user_posts,
                 'teleporter': teleporter_message,
             }
 
@@ -103,6 +110,7 @@ def display_userID(request, user_id):
         teleporter_message = obj.teleporter
         question_asked=obj.question_asked
         comments_made=obj.comments_made
+        user_posts = Post.objects.filter(author=obj).order_by('-created_on')
         username=obj.username
         context = {
             'other_user': obj,
@@ -112,6 +120,7 @@ def display_userID(request, user_id):
             'comments_made': comments_made,
             'question_asked': question_asked,
             'experience': experience,
+            'user_posts': user_posts,
             'teleporter': teleporter_message,
         }
 

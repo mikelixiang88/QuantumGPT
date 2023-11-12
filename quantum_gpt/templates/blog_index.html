@@ -1,0 +1,353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Discussion</title>
+    <style type="text/css">
+        body {
+            background-color: #2c2c2c; /* Tech grey background */
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            padding: 50px 0;
+        }
+        .app-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .sidebar {
+            flex: 0.7; /* Make the sidebar narrower */
+            padding: 20px;
+            border-right: 1px solid #00bcd4;
+            height: 80vh;
+            overflow-y: auto;
+        }
+        .response-container {
+            flex: 3.3; /* Adjust the width to fill the remaining space */
+            padding: 20px;
+            height: 80vh;
+            overflow-y: auto;
+        }
+        .response-container a {
+            color: #00bcd4;
+            text-decoration: none;
+        }
+
+        .input-section {
+            width: 80%; /* Set the width to match the textarea */
+            margin: 0 auto;
+        }
+        .input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%; /* Set to full width of the parent */
+        }
+        textarea {
+            width: calc(100% - 90px); /* Adjusted width to account for the button */
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+            vertical-align: middle;
+        }
+        .enter-button {
+            position: absolute;
+            right: 70px; /* Adjusted to align with the right side of the textarea */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c2c2c;
+            background-color: #00bcd4;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 0px;
+        }
+        button {
+            position: static;
+            right: 70px; /* Adjusted to align with the right side of the textarea */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c2c2c;
+            background-color: #00bcd4;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 25px;
+        }
+        button:hover {
+            background-color: #008ba3;
+        }
+        .session-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .session-list li {
+            padding: 10px;
+            border: 1px solid #00bcd4;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .session-list li.active {
+            background-color: #4c4c4c;
+        }
+
+        .session-button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left, similar to li */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .session-button.active {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+        .no-margin-top {
+            margin-top: 0;
+        }
+        /* Dropdown Container */
+        .dropdown {
+            margin-bottom: 0; /* Add some space between the dropdown and the "Clear" button */
+        }
+
+        /* Dropdown Button */
+        .dropbtn {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%; /* Make the button take the full width of the container */
+            text-align: left; /* Align text to the left */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        /* Dropdown Content */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #4c4c4c;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            transition: opacity 0.6s, visibility 0.6s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Dropdown Links */
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Hover Effect */
+        .dropdown-content a:hover {
+            background-color: #00bcd4;
+            color: #2c2c2c;
+        }
+
+        /* Show Dropdown on Hover */
+        .dropdown:hover .dropdown-content {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        /* Change color of the button on hover */
+        .dropbtn:hover {
+            background-color: #008ba3;
+        }
+
+        .teleporter-container {
+            position: relative;
+        }
+
+        .teleporter-text {
+            border: 1px solid #00bcd4; /* Set the border color to match the design */
+            width: 80%;
+            border-radius: 5px; /* Add rounded corners */
+            padding: 10px; /* Add some padding inside the border */
+            display: none;
+        }
+
+        .teleporter-text, .edit-teleporter, .save-teleporter {
+            display: none;
+        }
+
+        .teleporter-text.visible, .edit-teleporter.visible, .save-teleporter.visible {
+            display: block;
+        }
+
+        textarea.editable-teleporter {
+            width: 80%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00bcd4;
+            background-color: #4c4c4c;
+            color: #ffffff;
+        }
+        .search-user-container {
+            margin-top: 20px; /* Add some space above the search user container */
+        }
+
+        #searchUserForm {
+            display: flex;
+            align-items: center; /* Vertically align the label, input, and button */
+        }
+
+        #searchUserForm label,
+        #searchUserForm input,
+        #searchUserForm button {
+            margin-right: 10px; /* Add some space between the label, input, and button */
+        }
+
+        #searchUserForm button {
+            align-self: flex-end; /* Align the button to the bottom of the container */
+        }
+        .comment-section {
+            margin-top: 20px;
+            border: 1px solid #00bcd4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .comment-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .comment-list li {
+            margin-top: 10px;
+        }
+
+        .comment-list a {
+            color: #00bcd4;
+            text-decoration: none;
+        }
+
+        .comment-list a:hover {
+            text-decoration: underline;
+        }
+        .comment-list button {
+            vertical-align: middle;
+        }
+        .blog-post {
+            background-color: #4c4c4c; /* Dark grey background for blog posts */
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .blog-post:hover {
+            background-color: #3a3a3a; /* Slightly darker on hover */
+        }
+        .blog-post h3 {
+            color: #00bcd4; /* Title color */
+        }
+        .blog-post p {
+            color: #ffffff; /* Text color */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="dropdown">
+                <button class="dropbtn">Menu</button>
+                <div class="dropdown-content">
+                    <a href="{% url 'index' %}">Main</a>
+                    <a href="{% url 'app_page' %}">App</a>
+                    <a href="{% url 'chat_page' %}">Chat</a>
+                    <a href="{% url 'myaccount' %}">Account</a>
+                    <a href="{% url 'view_comments' %}">Discussions</a>
+                    <a href="{% url 'blog_index' %}">Blog</a>
+                </div>
+            </div>
+            <ul class="session-list">
+
+            </ul>
+            <div class="user-info">
+                <p id="usernameElement"><strong>Username:</strong> {{ request.user.username }}</p>
+                <p id="questionsLeftElement"><strong>Question Token:</strong> {{ question_left }}</p>
+                <p id="commentsMadeElement"><strong>Comments Made:</strong> {{ comments_made }}</p>
+            </div>
+        </div>
+        <div class="response-container">
+            {% if user.is_authenticated %}
+                <div class="create-post-button">
+                    <a href="{% url 'create_post' %}"><button>Create New Post</button></a>
+                </div>
+            {% endif %}
+            <h2>Blog Posts</h2>
+            {% for post in posts %}
+                <div class="blog-post" onclick="location.href='{% url 'blog_detail' post.id %}';">
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.description|truncatechars:100 }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script>
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+        function postcomment() {
+            const content = document.querySelector('textarea').value;
+
+            // Check if the comment is less than 20 characters
+            if (content.length < 20) {
+                alert("Your comment must be at least 20 characters long.");
+                return;
+            }
+
+            const topicId = {{ comment_id }};  // Assuming you passed the topic instance to the template
+            const url = `/api/topic/${topicId}/post_comment/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `content=${content}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(data.message);
+                    location.reload();  // Reload the page to display the new comment
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+
+    </script>
+</body>
+</html>
