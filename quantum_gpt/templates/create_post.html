@@ -327,6 +327,15 @@
     </div>
     
     <script>
+        CKEDITOR.on('instanceReady', function(event) {
+            var editor = event.editor;
+
+            // Check if the editor instance is the one you want to modify
+            if (editor.name === 'id_content') {
+                // Override the clipboard_handleImages configuration
+                editor.config.clipboard_handleImages = false;
+            }
+        });
         function uploadImage() {
             var fileInput = document.getElementById('imageInput');
             var file = fileInput.files[0];
