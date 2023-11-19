@@ -60,6 +60,7 @@ CKEDITOR_CONFIGS = {
             'clipboard',    # Required for clipboard features
             'dialog',       # Needed for dialog windows
             # ... other plugins you might be using ...
+	    'image',
         ]),
         'height': 300,
         'width': '100%',
