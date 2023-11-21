@@ -14,6 +14,30 @@ from .serializers import MessageSerializer, ChatSessionSerializer
 from django.utils import timezone
 
 
+def pusher_auth(request):
+    user = request.user  # Get the authenticated user
+
+    if user.is_authenticated:
+        channel_name = request.POST['channel_name']
+
+        # Generate a unique presence channel name
+        presence_channel_name = f'presence-{channel_name}'
+
+        # Generate the authentication token
+        auth = pusher_client.authenticate(
+            presence_channel_name,
+            request.POST['socket_id'],
+            {
+                'user_id': str(user.id),
+                'user_info': {
+                    'username': user.username,
+                }
+            }
+        )
+
+        return JsonResponse(auth)
+
+    return JsonResponse({'error': 'Authentication failed'}, status=403)
 
 def chat_page(request):
     return render(request, 'chat_page.html')
@@ -36,12 +60,20 @@ def remove_participants(request, chat_session_id):
     user_ids = request.data.get('participants')
     for user_id in user_ids:
         user = get_object_or_404(CustomUser, id=user_id)
-        chat_session.participants.remove(user)
+        if user in chat_session.participants.all():
+            chat_session.participants.remove(user)
+            pusher_channel = f'presence-chat-{chat_session_id}'  # 更新为 Presence 频道
+            pusher_event = 'participant_removed'  # 更新为事件名称
+            pusher_data = {
+                'removedUserId': user_id,
+                'status': 'offline'  # 设置用户状态为离线
+            }
+            pusher_client.trigger(pusher_channel, pusher_event, pusher_data, {"message": "You have been removed from the chat."})
     return JsonResponse({"success": True, "message": f"success"}, status=200)
-        
+  
 @api_view(['POST', 'GET'])
 def add_participants(request, chat_session_id):
-    action=""
+    action = ""
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
@@ -55,9 +87,13 @@ def add_participants(request, chat_session_id):
         if user not in chat_session.participants.all():
             chat_session.participants.add(user)
             action = "added to"
-            pusher_client.trigger(f'chat_{chat_session_id}', 'participant_added', {
-                'participant': user.username
-            })
+            pusher_channel = f'presence-chat-{chat_session_id}'  # 更新为 Presence 频道
+            pusher_event = 'participant_added'  # 更新为事件名称
+            pusher_data = {
+                'participant': user.username,
+                'status': 'online'  # 设置用户状态为在线
+            }
+            pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
         else:
             action = "already in"  # Assign a different value if needed
     return JsonResponse({"success": True, "message": f"success {action}"}, status=200)
@@ -65,7 +101,6 @@ def add_participants(request, chat_session_id):
 @login_required
 @api_view(['POST', 'GET'])
 def send_message(request, chat_session_id):
-    # Get the ChatSession object or return a 404 response if it doesn't exist
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
@@ -86,10 +121,23 @@ def send_message(request, chat_session_id):
             )
 
             # Trigger a Pusher event to notify clients of the new message
-            pusher_channel = f'chat-{chat_session_id}'
+            pusher_channel = f'presence-chat-{chat_session_id}'  # 使用 Presence 频道
             pusher_event = 'new-message'
-            pusher_data = {'message': serializer.data, 'message_id':message.id, 'username':request.user.username, 'userID':request.user.id}
+            
+            # 获取发送者的在线状态，这里假设在线状态存储在用户的模型中的字段中
+            sender_status = request.user.status  # 你需要根据你的用户模型字段来获取用户的在线状态
+            
+            pusher_data = {
+                'message': serializer.data,
+                'message_id': message.id,
+                'username': request.user.username,
+                'userID': request.user.id,
+                'status': sender_status  # 在线状态信息
+            }
+            
             pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
+            
+            # 同样，也可以更新 chat-updates 频道以通知客户端有新消息
             pusher_channel_2 = 'chat-updates'
             pusher_event_2 = 'new-message'
             pusher_data_2 = {'sessionId': chat_session_id}
@@ -104,16 +152,35 @@ def send_message(request, chat_session_id):
     # Handle other HTTP methods (e.g., GET, PUT, DELETE) if necessary
     return Response({'detail': 'Method not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+
 @api_view(['POST'])
 def leave_chat(request, chat_session_id):
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({"success": True, "message": "You are not in the chat session"}, status=200)
-    user=request.user
-    if user==chat_session.owner:
+    
+    user = request.user
+    is_owner = (user == chat_session.owner)
+    
+    # 在用户离开聊天室之前获取其在线状态
+    user_status = user.status  # 假设用户的在线状态存储在模型字段中
+    
+    if is_owner:
         chat_session.delete()
     else:
-        chat_session.participants.remove(request.user)
+        chat_session.participants.remove(user)
+    
+    # 触发一个事件通知其他参与者有用户离开了聊天室
+    pusher_channel = f'presence-chat-{chat_session_id}'  # 使用 Presence 频道
+    pusher_event = 'participant_left'
+    
+    pusher_data = {
+        'participant': user.username,
+        'status': 'offline' if user_status == 'online' else user_status  # 更新用户在线状态
+    }
+    
+    pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
+    
     return JsonResponse({"success": True, "message": "Successfully left the chat session"}, status=200)
 
 @api_view(['POST'])
