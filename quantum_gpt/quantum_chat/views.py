@@ -14,6 +14,29 @@ from .serializers import MessageSerializer, ChatSessionSerializer
 from django.utils import timezone
 
 
+def pusher_auth(request):
+    user = request.user
+
+    if user.is_authenticated:
+        channel_name = request.POST['channel_name']
+
+       
+        presence_channel_name = f'presence-{channel_name}'
+
+        auth = pusher_client.authenticate(
+            presence_channel_name,
+            request.POST['socket_id'],
+            {
+                'user_id': str(user.id),
+                'user_info': {
+                    'username': user.username,
+                }
+            }
+        )
+
+        return JsonResponse(auth)
+
+    return JsonResponse({'error': 'Authentication failed'}, status=403)
 
 def chat_page(request):
     return render(request, 'chat_page.html')
@@ -36,16 +59,23 @@ def remove_participants(request, chat_session_id):
     user_ids = request.data.get('participants')
     for user_id in user_ids:
         user = get_object_or_404(CustomUser, id=user_id)
-        chat_session.participants.remove(user)
+        if user in chat_session.participants.all():
+            chat_session.participants.remove(user)
+            pusher_channel = f'presence-chat-{chat_session_id}'
+            pusher_event = 'participant_removed' 
+            pusher_data = {
+                'removedUserId': user_id,
+                'status': 'offline'  
+            }
+            pusher_client.trigger(pusher_channel, pusher_event, pusher_data, {"message": "You have been removed from the chat."})
     return JsonResponse({"success": True, "message": f"success"}, status=200)
-        
+  
 @api_view(['POST', 'GET'])
 def add_participants(request, chat_session_id):
-    action=""
+    action = ""
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
-    # Parse the JSON data from the request body
     try:
         user_ids = request.data.get('participants')
     except json.JSONDecodeError:
@@ -55,28 +85,29 @@ def add_participants(request, chat_session_id):
         if user not in chat_session.participants.all():
             chat_session.participants.add(user)
             action = "added to"
-            pusher_client.trigger(f'chat_{chat_session_id}', 'participant_added', {
-                'participant': user.username
-            })
+            pusher_channel = f'presence-chat-{chat_session_id}' 
+            pusher_event = 'participant_added'
+            pusher_data = {
+                'participant': user.username,
+                'status': 'online' 
+            }
+            pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
         else:
-            action = "already in"  # Assign a different value if needed
+            action = "already in"
     return JsonResponse({"success": True, "message": f"success {action}"}, status=200)
 
 @login_required
 @api_view(['POST', 'GET'])
 def send_message(request, chat_session_id):
-    # Get the ChatSession object or return a 404 response if it doesn't exist
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({'detail': 'You are not a participant in this chat session.'}, status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'POST' or request.method == 'GET':
-        # Serialize the message data
         serializer = MessageSerializer(data=request.data)
         chat_session.updated_at = timezone.now()
         chat_session.save()
 
-        # Check if the serializer is valid
         if serializer.is_valid():
             # Create a Message object with the sender, chat session, and content
             message = Message.objects.create(
@@ -85,35 +116,63 @@ def send_message(request, chat_session_id):
                 content=serializer.validated_data['content']
             )
 
-            # Trigger a Pusher event to notify clients of the new message
-            pusher_channel = f'chat-{chat_session_id}'
+            pusher_channel = f'presence-chat-{chat_session_id}'
             pusher_event = 'new-message'
-            pusher_data = {'message': serializer.data, 'message_id':message.id, 'username':request.user.username, 'userID':request.user.id}
+            
+           
+            sender_status = request.user.status
+            
+            pusher_data = {
+                'message': serializer.data,
+                'message_id': message.id,
+                'username': request.user.username,
+                'userID': request.user.id,
+                'status': sender_status  
+            }
+            
             pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
+
             pusher_channel_2 = 'chat-updates'
             pusher_event_2 = 'new-message'
             pusher_data_2 = {'sessionId': chat_session_id}
             pusher_client.trigger(pusher_channel_2, pusher_event_2, pusher_data_2)
 
-            # Return a successful response with the serialized data
+    
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        # Return a response with serializer errors if the data is invalid
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Handle other HTTP methods (e.g., GET, PUT, DELETE) if necessary
+
     return Response({'detail': 'Method not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @api_view(['POST'])
 def leave_chat(request, chat_session_id):
     chat_session = get_object_or_404(ChatSession, id=chat_session_id)
     if request.user not in chat_session.participants.all():
         return Response({"success": True, "message": "You are not in the chat session"}, status=200)
-    user=request.user
-    if user==chat_session.owner:
+    
+    user = request.user
+    is_owner = (user == chat_session.owner)
+    
+   
+    user_status = user.status
+    
+    if is_owner:
         chat_session.delete()
     else:
-        chat_session.participants.remove(request.user)
+        chat_session.participants.remove(user)
+    
+
+    pusher_channel = f'presence-chat-{chat_session_id}' 
+    pusher_event = 'participant_left'
+    
+    pusher_data = {
+        'participant': user.username,
+        'status': 'offline' if user_status == 'online' else user_status 
+    
+    pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
+    
     return JsonResponse({"success": True, "message": "Successfully left the chat session"}, status=200)
 
 @api_view(['POST'])
@@ -147,17 +206,17 @@ def chat_sessions(request):
 
 @login_required
 def OpenSessionView(request, session_id):
-    # Get the chat session
+
     chat_session = get_object_or_404(ChatSession, pk=session_id)
         
-    # Ensure the user is a participant in the chat session
+
     if request.user not in chat_session.participants.all():
         return JsonResponse({'error': 'User not authorized for this chat session'}, status=403)
         
-    # Fetch messages for the chat session
+
     messages = Message.objects.filter(chat_session=chat_session).order_by('timestamp')
         
-    # Prepare message data to be sent in the response
+
     message_data = []
     for message in messages:
         message_data.append({

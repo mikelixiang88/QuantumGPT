@@ -13,4 +13,5 @@ urlpatterns = [
     path('open_chat/<int:session_id>/messages/', views.OpenSessionView, name='open_session'),
     path('get_participants/<int:session_id>/', views.get_participants, name='get_participants'),
     path('chat/<int:chat_session_id>/changetitle/', views.changetitle, name='changetitle'),
+    path('pusher/auth/', views.pusher_auth, name='pusher_auth'),
 ]
