@@ -357,7 +357,13 @@
     <script>
 
         var pusher = new Pusher("f78938341d8a7ccb7e17", {
-          cluster: "us3",
+            cluster: "us3",
+            authEndpoint: '/pusher/auth/', 
+            auth: {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), // Include CSRF token?
+                },
+            },
         });
         pusher.connection.bind('connected', function() {
           console.log('Connected to Pusher');
@@ -598,16 +604,16 @@
 
 
         function openChatSession(sessionId, chatTitle) {
-            
             // Bind to a Pusher event when a new message is triggered for this session
             if (currentChannel) {
                 currentChannel.unbind("new-message");
+                currentChannel.unbind("participant-removed"); // Update event name
                 pusher.unsubscribe(currentChannel.name);
             }
 
-            // Subscribe to the new channel
-            currentChannel = pusher.subscribe(`chat-${sessionId}`);
-            
+            // Subscribe to the new channel with the same naming convention as in the backend
+            currentChannel = pusher.subscribe(`presence-chat-${sessionId}`); // Use presence channel
+
             // Bind to a Pusher event when a new message is triggered for this session
             currentChannel.bind("new-message", function (data) {
                 if (!displayedMessageIds.includes(data.message_id)) {
@@ -634,8 +640,17 @@
                 }
             });
 
+            // Bind to an event that listens for when a user is removed from the chat
+            currentChannel.bind("participant-removed", function (data) {
+                if (data.removedUserId === {{ request.user.id }}) {
+                    // The current user has been removed from the chat, so unsubscribe
+                    alert(data.message); // Alert the user they've been removed
+                    pusher.unsubscribe(`presence-chat-${sessionId}`);
+                }
+            });
+
             let titleDiv = document.getElementById('chatTitle');
-            titleDiv.innerHTML=`${chatTitle}`;
+            titleDiv.innerHTML = `${chatTitle}`;
 
             // Load and display messages for the specified chat session
             currentSessionId = sessionId;
@@ -668,34 +683,36 @@
             row1.appendChild(leaveButton);
             row1.appendChild(viewP);
 
-
-            
-
-            fetch(`/open_chat/${sessionId}/messages/`)
+            fetch(`/open_chat/${sessionId}/messages/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), // Include CSRF token
+                },
+            })
                 .then(response => response.json())
                 .then(data => {
-                    if(data.owner=="{{ request.user.id }}"){
-                        is_owner=true;
-                    }else{
-                        is_owner=false;
+                    if (data.owner === {{ request.user.id }}) {
+                        is_owner = true;
+                    } else {
+                        is_owner = false;
                     }
                     // Check if the user is an owner and add more buttons accordingly
                     if (is_owner) {
                         const transferButton = document.createElement('button');
                         transferButton.textContent = 'Transfer';
-                        transferButton.addEventListener('click', function() {
+                        transferButton.addEventListener('click', function () {
                             transferOwnership(sessionId);
                         });
 
                         const removeButton = document.createElement('button');
                         removeButton.textContent = 'Remove Participant';
-                        removeButton.addEventListener('click', function() {
+                        removeButton.addEventListener('click', function () {
                             removeParticipants(sessionId);
                         });
 
                         const changetitleButton = document.createElement('button');
                         changetitleButton.textContent = 'Change Title';
-                        changetitleButton.addEventListener('click', function() {
+                        changetitleButton.addEventListener('click', function () {
                             changeName(sessionId);
                         });
 
@@ -704,7 +721,6 @@
                         row2.appendChild(transferButton);
                         row2.appendChild(removeButton);
                         row2.appendChild(changetitleButton);
-
                     }
                     if (Array.isArray(data.messages)) {
                         const messageContainer = document.getElementById('chatMessages');
@@ -735,6 +751,7 @@
                     console.error('Error fetching and processing messages:', error);
                 });
         }
+
 
 
         function initiateChat(selectedUsers) {
