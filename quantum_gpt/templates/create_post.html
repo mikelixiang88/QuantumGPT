@@ -1,6 +1,5 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'master_css.css' %}">
-<script src="{% static 'master_js.js' %}"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,5 +42,54 @@
         </div>
     </div>
     
+    <script>
+       
+        function uploadImage() {
+            var fileInput = document.getElementById('imageInput');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/upload_image/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                var imageUrl = data.imageUrl;
+                var editorContent = CKEDITOR.instances.yourEditorInstance.getData();
+                // Insert the image at the end of the content or at the cursor position
+                CKEDITOR.instances.yourEditorInstance.setData(editorContent + '<img src="' + imageUrl + '" alt="Uploaded Image"/>');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function insertImageInEditor(imageUrl) {
+            // Example: Inserting image at the end of CKEditor content
+            var editorContent = CKEDITOR.instances.yourEditorInstance.getData();
+            CKEDITOR.instances.yourEditorInstance.setData(editorContent + '<img src="' + imageUrl + '" alt="Uploaded Image"/>');
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+    </script>
 </body>
 </html>

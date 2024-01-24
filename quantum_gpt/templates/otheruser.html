@@ -1,13 +1,12 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'master_css.css' %}">
-<script src="{% static 'master_js.js' %}"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account - QuantumGPT</title>
-
+    
 </head>
 <body>
     <div class="app-container">
@@ -61,5 +60,13 @@
             </div>
         </div>
     </div>
+    <script>
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+    </script>
 </body>
 </html>

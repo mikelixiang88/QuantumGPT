@@ -1,6 +1,5 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'master_css.css' %}">
-<script src="{% static 'master_js.js' %}"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,5 +47,47 @@
         </div>
     </div>
     
+    <script>
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+        function postcomment() {
+            const content = document.querySelector('textarea').value;
+
+            // Check if the comment is less than 20 characters
+            if (content.length < 20) {
+                alert("Your comment must be at least 20 characters long.");
+                return;
+            }
+
+            const topicId = {{ comment_id }};  // Assuming you passed the topic instance to the template
+            const url = `/api/topic/${topicId}/post_comment/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `content=${content}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(data.message);
+                    location.reload();  // Reload the page to display the new comment
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+
+    </script>
 </body>
 </html>

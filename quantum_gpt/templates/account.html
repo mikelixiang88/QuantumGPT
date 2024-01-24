@@ -1,6 +1,5 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'master_css.css' %}">
-<script src="{% static 'master_js.js' %}"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,6 +100,71 @@
                 qrCodeContainer.style.display = "none"; // Hide the QR code container
             }
         });
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+        function editTeleporter() {
+            // Send the updated teleporter to the server
+            fetch('/update_teleporter/', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'teleporter': 'The teleporter is empty',
+                }),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',  // Necessary to work with Django
+                    'X-CSRFToken': getCookie('csrftoken')  // For CSRF protection in Django
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let teleporter = data.teleporter;;
+                    document.getElementById('editableTeleporter').value = teleporter;
+                    document.getElementById('teleporterText').style.display = 'none';
+                    document.getElementById('editableTeleporter').style.display = 'block';
+                    document.querySelector('.edit-teleporter').style.display = 'none';
+                    document.querySelector('.save-teleporter').style.display = 'block';
+
+                } else {
+                    alert('Error updating teleporter.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function saveTeleporter() {
+            const teleporter = document.getElementById('editableTeleporter').value;
+            // Send the updated teleporter to the server
+            fetch('/update_teleporter/', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'teleporter': teleporter,
+                }),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',  // Necessary to work with Django
+                    'X-CSRFToken': getCookie('csrftoken')  // For CSRF protection in Django
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Teleportation completed, and another user can see your message! Due to no cloning theorem, you are not able to see your message here. ');
+                    document.getElementById('teleporterText').style.display = 'block';
+                    document.getElementById('editableTeleporter').style.display = 'none';
+                    document.querySelector('.edit-teleporter').style.display = 'block';
+                    document.querySelector('.save-teleporter').style.display = 'none';
+                } else {
+                    alert('Error updating teleporter.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
 
     </script>
 </body>
