@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-bya=nog651hzh^s(q39wc4*ihg2%ez@z-(%3mpw-@-h7l=!9jm
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['34.41.195.11', 'quantumgpt.science','www.quantumgpt.science','127.0.0.1',]
+ALLOWED_HOSTS = ['34.41.195.11', 'quantumgpt.science','www.quantumgpt.science','127.0.0.1','34.172.137.175',]
 AUTH_USER_MODEL = 'quantum_accounts.CustomUser'
 LOGIN_URL = 'login'
 
@@ -155,7 +155,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'c_static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
