@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-bya=nog651hzh^s(q39wc4*ihg2%ez@z-(%3mpw-@-h7l=!9jm'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['34.41.195.11', 'quantumgpt.science','www.quantumgpt.science','127.0.0.1',]
 AUTH_USER_MODEL = 'quantum_accounts.CustomUser'

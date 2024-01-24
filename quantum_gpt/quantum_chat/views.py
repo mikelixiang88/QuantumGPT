@@ -170,7 +170,7 @@ def leave_chat(request, chat_session_id):
     pusher_data = {
         'participant': user.username,
         'status': 'offline' if user_status == 'online' else user_status 
-    
+    }
     pusher_client.trigger(pusher_channel, pusher_event, pusher_data)
     
     return JsonResponse({"success": True, "message": "Successfully left the chat session"}, status=200)
