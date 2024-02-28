@@ -49,7 +49,7 @@ textarea {
 
 .enter-button {
     position: absolute;
-    right: 70px; /* Adjusted to align with the right side of the textarea */
+    right: 0px; /* Adjusted to align with the right side of the textarea */
     top: 50%;
     transform: translateY(-50%);
     color: #2c2c2c;
